@@ -20,11 +20,12 @@ class Prompt:
         self.data = self.load_toml(self.prompt_file)
         self.version = self.data["METADATA"]["version"]
 
-        self.init_system_prompt()
-        self.init_user_prompts()
-        self.init_response_templates()
-        self.init_stop_tags()
-        self.init_schema()
+        self.system_prompt = self.init_constructor_component("system")
+        self.user_prompts = self.init_constructor_component("user")
+        self.response_templates = self.init_constructor_component("response_templates")
+        self.stop_tags = self.init_constructor_component("stop_tags")
+
+        self.schemas = self.get_schema()
         
         self.num_turns = len(self.user_prompts)
         
@@ -52,67 +53,50 @@ class Prompt:
 
         return processed_schema
     
-    def init_schema(self):
-        self.schemas = self.process_schema(self.data["SCHEMAS"].values())
+    def get_schema(self):
+        schemas = self.process_schema(self.data["SCHEMAS"].values())
         if self.debug:
             print("\ninit_schema")
             print(self.schemas)
+            
+        return schemas
+            
+    def process_rdp(self, string):
+        def replace_rdp(match):
+            expression = match.group(1).strip()
+            if '+' in expression:
+                # Handle concatenation of prompts
+                prompt_names = [name.strip() for name in expression.split('+')]
+                prompts = [self.data['PROMPTS'].get(name) for name in prompt_names]
+                value = ''.join(prompts)
+            else:
+                # Handle single prompt
+                variable_name = expression
+                if hasattr(self, variable_name):
+                    value = getattr(self, variable_name)
+                else:
+                    value = self.data['PROMPTS'].get(variable_name)
+            return value
+
+        rdp_pattern = r'rdp\((.+?)\)'
+        processed_string = re.sub(rdp_pattern, replace_rdp, string)
+        return processed_string
     
-    def init_system_prompt(self):
-        if self.data["CONSTRUCTOR"]["system"] in self.data["PROMPTS"].keys():
-            self.system_prompt = self.data["PROMPTS"][self.data["CONSTRUCTOR"]["system"]]
+    def init_constructor_component(self, component):
+        component_data = self.data["CONSTRUCTOR"][component]
+        if component == "system":
+            component_data = self.process_rdp(component_data)
         else:
-            self.system_prompt = self.data["CONSTRUCTOR"]["system"]
-        if self.debug:
-            print("\ninit_system_prompt")
-            print(self.data["CONSTRUCTOR"]["system"])
-            print(self.system_prompt)
-    
-    def init_response_templates(self):
-            
-        response_templates = []
-        for value in self.data["CONSTRUCTOR"]["response_templates"]:
-            if value in self.data["PROMPTS"].keys():
-                response_templates.append(self.data["PROMPTS"][value])
-            else:
-                response_templates.append(value)
+            component_data = [self.process_rdp(i) for i in component_data]
+        
         
         if self.debug:
-            print("\ninit_response_templates")
-            print(self.data["CONSTRUCTOR"]["response_templates"])
-            print(response_templates)
+            print(f"\n{component.title()}:")
+            print(component_data)
+            print("----------------")
             
-        self.response_templates = response_templates
-
-    def init_stop_tags(self):
-        stop_tags = []
-        for value in self.data["CONSTRUCTOR"]["stop_tags"]:
-            if value in self.data["PROMPTS"].keys():
-                stop_tags.append(self.data["PROMPTS"][value])
-            else:
-                stop_tags.append(value)
-        
-        if self.debug:
-            print("\ninit_stop_tags")
-            print(self.data["CONSTRUCTOR"]["stop_tags"])
-            print(stop_tags)
-            
-        self.stop_tags = stop_tags
-
-    def init_user_prompts(self):
-        user_prompts = self.data["CONSTRUCTOR"]["user"]
-        prompts = []
-        for i in user_prompts:
-            prompt = ""
-            for j in [k.strip() for k in i.split("+")]:
-                prompt += self.data["PROMPTS"][j]
-            prompts.append(prompt)
-        if self.debug:
-            print("\ninit_user_prompts")
-            print(user_prompts)
-            print(prompts)
-        self.user_prompts = prompts
-        
+        return component_data
+                
     def load_toml(self, path):
         with open(path, "rb") as f:
             return tomllib.load(f)

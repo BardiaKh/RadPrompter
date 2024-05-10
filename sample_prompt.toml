@@ -79,9 +79,9 @@ assistant_response_template = """
 [CONSTRUCTOR]
 system = "rdp(SYS_PROMPT)"
 user = [
-"rdp(USER_PROMPT + CoT_TEMPLATE)"
+"rdp(user_prompt_intro + user_prompt_cot)"
 ,
-"rdp(RESPONSE_CoT_TEMPLATE)"
+"rdp(user_prompt_cot_2nd_turn)"
 ]
 stop_tags = [
 "</answer>"
@@ -91,7 +91,7 @@ stop_tags = [
 response_templates = [
 "<answer>\n<initial_answer>"
 ,
-"ASSISTANT_JSON_PREFILL"
+"rdp(assistant_response_template)"
 ]
 
 
