@@ -36,3 +36,29 @@ class OpenAIClient(Client):
             max_tokens=max_tokens,
         )
         return completion.choices[0].message.content
+    
+class vLLMClient(Client):
+    def __init__(self, model, **kwargs):
+        Client.__init__(self, model)
+        if "api_key" not in kwargs:
+            kwargs['api_key'] = "EMPTY"
+        
+        if "base_url" not in kwargs:
+            raise ValueError("base_url must be provided for vLLMClient")
+        self.client = OpenAI(**kwargs)
+        
+    def chat_complete(self, messages, stop, max_tokens, **kwargs):
+        completion = self.client.chat.completions.create(
+            model=self.model,
+            messages=messages,
+            frequency_penalty=1,
+            stream=False,
+            seed=42,
+            temperature=0.0,
+            stop=stop,
+            logprobs=False,
+            top_logprobs=0,
+            top_p=1.0,
+            max_tokens=max_tokens,
+        )
+        return completion.choices[0].message.content

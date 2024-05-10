@@ -1,1 +1,1 @@
-from .clients import OpenAIClient
+from .clients import OpenAIClient, vLLMClient
