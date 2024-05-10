@@ -1,12 +1,13 @@
 [METADATA]
+
 version = 0.1
 description = "A sample prompt for RadPrompter"
 
 [PROMPTS]
 
-SYS_PROMPT = "You are a helpful assistant that has 20 years of experience in reading radiology reports and extracting data elements."
+system_prompt = "You are a helpful assistant that has 20 years of experience in reading radiology reports and extracting data elements."
 
-USER_PROMPT = """
+user_prompt_intro = """
 Carefully review the provided chest CT report (in the <report> tag). Ensure that each data element is accurately captured.
 
 Here is the report:
@@ -22,7 +23,7 @@ Please pay attention to the following details:
 - Do not print anything else other than the provided output format.
 """
 
-CoT_TEMPLATE = """
+user_prompt_cot = """
 I want you to extract the following data element from the report:
 {{hint}}
 
@@ -46,7 +47,7 @@ final answer goes here
 </answer>
 """
 
-RESPONSE_noCoT_TEMPLATE = """
+user_prompt_no_cot = """
 I want you to extract the following data element from the report: 
 {{hint}}
 
@@ -54,33 +55,33 @@ Your final answer elements in a valid JSON format and is between <json> and </js
 
 <json>
 {
-  "{{variable}}": "answer" 
+  "{{variable_name}}": "answer" 
 }
 </json>
 """
 
-RESPONSE_CoT_TEMPLATE = """
+user_prompt_cot_2nd_turn = """
 Now, based on your expalanation, provide your final answer elements in a valid JSON format and is between <json> and </json> tags:
 
 <json>
 {
-  "{{variable}}": "answer" 
+  "{{variable_name}}": "answer" 
 }
 </json>
 """
 
-ASSISTANT_JSON_PREFILL = """
+assistant_response_template = """
 <json>
 {
-  "{{variable}}" : \""""
+  "{{variable_name}}" : \""""
 
 
 [CONSTRUCTOR]
-system = "SYS_PROMPT"
+system = "rdp(SYS_PROMPT)"
 user = [
-"USER_PROMPT + CoT_TEMPLATE"
+"rdp(USER_PROMPT + CoT_TEMPLATE)"
 ,
-"RESPONSE_CoT_TEMPLATE"
+"rdp(RESPONSE_CoT_TEMPLATE)"
 ]
 stop_tags = [
 "</answer>"
@@ -94,19 +95,17 @@ response_templates = [
 ]
 
 
-[SCHEMA]
+[SCHEMAS]
 
-[SCHEMA.PulmonaryEmbolism]
+[SCHEMAS.PulmonaryEmbolism]
 name = "Pulmonary Embolism"
 type = "select"
 options = ["Present", "Absent"]
 hint = """"Indicate `Present` if the report explicitly mentions the patient has pulmonary embolism in their CT scan. 
 Indicate `Absent` if pulmonary embolism is not seen or if a previously observed pulmonary embolism is mentioned as resolved."""
 show_options_in_hint = true
-logprobs = true
-CoT = true
 
-[SCHEMA.Laterality]
+[SCHEMAS.Laterality]
 name = "Laterality"
 type = "select"
 options = ["Left", "Right", "Bilateral", "Not Mentioned"]
@@ -117,11 +116,9 @@ Indicate `Bilateral` if the report explicitly mentions the patient has a bilater
 Indicate `Not Mentioned` if side of pulmonary embolism is not mentioned.
 """
 show_options_in_hint = true
-logprobs = false
-CoT = false
 
 
-[SCHEMA.Acuity]
+[SCHEMAS.Acuity]
 name = "Acuity"
 type = "select"
 options = ["Acute", "Chronic", "Mixed", "Not Mentioned"]
@@ -132,5 +129,3 @@ Indicate `Mixed` if the report explicitly mentions the patient has a acute on ch
 Indicate `Not Mentioned` if acuity of pulmonary embolism is not mentioned.
 """
 show_options_in_hint = true
-logprobs = false
-CoT = false

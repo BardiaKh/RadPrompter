@@ -37,26 +37,26 @@ class Prompt:
         processed_schema = []
         for item in schema:
             hint = f"'{item['name']}'\n"
-            if item['show_options_in_hint']:
-                hint += "Here are your options and you can explicitly use one of these:\n  - " + "\n  - ".join(f"`{i}`" for i in item['options']) + "\n\n"
+            if item['type'] == "select":
+                if item['show_options_in_hint']:
+                    hint += "Here are your options and you can explicitly use one of these:\n  - " + "\n  - ".join(f"`{i}`" for i in item['options']) + "\n\n"
 
             hint += "Hint: " + item['hint']
 
+            other_values = {k:v for k,v in item.items() if k not in ["name", "hint", "type", "options", "show_options_in_hint"]}
             processed_schema.append({
-                "variable": item['name'],
-                "CoT": item['CoT'],
+                "variable_name": item['name'],
                 "hint": hint,
-                "type": item['type'],
-                "options": item['options'] if item['type'] == "select" else None,
+                **other_values
             })
 
         return processed_schema
     
     def init_schema(self):
-        self.schema = self.process_schema(self.data["SCHEMA"].values())
+        self.schemas = self.process_schema(self.data["SCHEMAS"].values())
         if self.debug:
             print("\ninit_schema")
-            print(self.schema)
+            print(self.schemas)
     
     def init_system_prompt(self):
         if self.data["CONSTRUCTOR"]["system"] in self.data["PROMPTS"].keys():
