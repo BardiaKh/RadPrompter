@@ -3,8 +3,7 @@ import html
 import pickle
 import datetime
 import tomllib
-
-
+import hashlib
 try: 
     from IPython.display import HTML, display
     from IPython import get_ipython
@@ -18,6 +17,7 @@ class Prompt:
         assert prompt_file.endswith(".toml"), "Prompt file should be a TOML file."
         self.prompt_file = prompt_file
         self.data = self.load_toml(self.prompt_file)
+        self.md5_hash = hashlib.md5(str(self.data).encode()).hexdigest()
         self.version = self.data["METADATA"]["version"]
 
         self.system_prompt = self.init_constructor_component("system")
@@ -25,7 +25,7 @@ class Prompt:
         self.response_templates = self.init_constructor_component("response_templates")
         self.stop_tags = self.init_constructor_component("stop_tags")
 
-        self.schemas = self.get_schema()
+        self.schemas = self.get_schemas()
         
         self.num_turns = len(self.user_prompts)
         
@@ -37,24 +37,32 @@ class Prompt:
     def process_schema(self, schema):
         processed_schema = []
         for item in schema:
-            hint = f"'{item['name']}'\n"
+            assert "variable_name" in item, "Schema item should have a 'variable_name' key."
+            hint = f"'{item['variable_name']}'\n"
             if item['type'] == "select":
                 if item['show_options_in_hint']:
                     hint += "Here are your options and you can explicitly use one of these:\n  - " + "\n  - ".join(f"`{i}`" for i in item['options']) + "\n\n"
 
             hint += "Hint: " + item['hint']
 
-            other_values = {k:v for k,v in item.items() if k not in ["name", "hint", "type", "options", "show_options_in_hint"]}
+            other_values = {k:v for k,v in item.items() if k not in ["variable_name", "type", "options", "hint", "show_options_in_hint"]}
             processed_schema.append({
-                "variable_name": item['name'],
+                "variable_name": item['variable_name'],
+                "type": item['type'],
+                "options": item['options'] if item['type'] == "select" else "",
                 "hint": hint,
                 **other_values
             })
 
         return processed_schema
     
-    def get_schema(self):
+    def get_schemas(self):
         schemas = self.process_schema(self.data["SCHEMAS"].values())
+        if len(schemas) == 0:
+            schemas = {
+                "variable_name": "default",
+                "type": "default",
+            }
         if self.debug:
             print("\ninit_schema")
             print(self.schemas)
@@ -199,16 +207,4 @@ class Prompt:
         with open(path, "rb") as f:
             obj = pickle.load(f)
         return obj
-    
-    
-if __name__=="__main__":
-    prompt_file = "/home/tdapame/development/RadPrompter/demo_schema.toml"
-    prompt = Prompt(prompt_file, debug=True)
-
-    print(prompt.system_prompt)
-    print(prompt.user_prompts)
-    print(prompt.response_templates)
-    print(prompt.stop_tags)
-    
-    print(prompt)
     

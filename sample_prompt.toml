@@ -98,7 +98,7 @@ response_templates = [
 [SCHEMAS]
 
 [SCHEMAS.PulmonaryEmbolism]
-name = "Pulmonary Embolism"
+variable_name = "Pulmonary Embolism"
 type = "select"
 options = ["Present", "Absent"]
 hint = """"Indicate `Present` if the report explicitly mentions the patient has pulmonary embolism in their CT scan. 
@@ -106,7 +106,7 @@ Indicate `Absent` if pulmonary embolism is not seen or if a previously observed 
 show_options_in_hint = true
 
 [SCHEMAS.Laterality]
-name = "Laterality"
+variable_name = "Laterality"
 type = "select"
 options = ["Left", "Right", "Bilateral", "Not Mentioned"]
 hint = """
@@ -119,7 +119,7 @@ show_options_in_hint = true
 
 
 [SCHEMAS.Acuity]
-name = "Acuity"
+variable_name = "Acuity"
 type = "select"
 options = ["Acute", "Chronic", "Mixed", "Not Mentioned"]
 hint = """

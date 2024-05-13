@@ -1,34 +1,56 @@
 from copy import deepcopy
 from tqdm import tqdm
+import tomllib
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 class RadPrompter():
-    def __init__(self, client, prompt, concurrency=1):
+    def __init__(self, client, prompt, hide_blocks=False, sanitize_response=True, concurrency=1):
         self.client = client
         self.prompt = prompt
+        self.hide_blocks = hide_blocks
+        self.sanitize_response = sanitize_response
         self.concurrency = concurrency
         self.log = {
             "Model": self.client.model,
+            "Prompt TOML": self.prompt.prompt_file,
+            "Prompt Version": self.prompt.version,
+            "Prompt Hash": self.prompt.md5_hash,
             "Concurrency Factor": self.concurrency,
         }
         
     def process_single_item(self, item):
         prompt = deepcopy(self.prompt)
         prompt.replace_placeholders(item)
-        
+            
         messages = [
             {"role": "system", "content": prompt.system_prompt},
         ]
+        item_response = []
+        for schema in prompt.schemas:
+            schema_response = []
+            prompt_with_schema = deepcopy(prompt)
+            prompt_with_schema.replace_placeholders(schema)
         
-        for i in range(prompt.num_turns):
-            messages.append({"role": "user", "content": prompt.user_prompts[i]})
-            if prompt.response_templates[i] != "":
-                messages.append({"role": "assistant", "content": prompt.response_templates[i]})
+            for i in range(prompt.num_turns):
+                messages.append({"role": "user", "content": prompt_with_schema.user_prompts[i]})
+                if prompt.response_templates[i] != "":
+                    messages.append({"role": "assistant", "content": prompt_with_schema.response_templates[i]})
+                
+                response, messages = self.client.ask_model(messages, prompt_with_schema.stop_tags[i])
+                schema_response.append(response)
             
-            response, messages = self.client.ask_model(messages, prompt.stop_tags[i])
-                        
-        return messages
+            item_response.append({f"{schema['variable_name']}":schema_response})
+            
+            if self.hide_blocks:
+                messages = [
+                    {"role": "system", "content": prompt.system_prompt},
+                ]
+
+        if (len(item_response) == 1 and prompt.schemas['variable_name'] == "default"):
+            item_response = item_response[0]
+        
+        return item_response
 
     def __call__(self, items):
         if not isinstance(items, list):
@@ -57,3 +79,5 @@ class RadPrompter():
         with open(log_dir, "w") as f:
             for key, value in self.log.items():
                 f.write(f"{key}: {value}\n")
+                
+        
