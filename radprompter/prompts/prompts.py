@@ -16,7 +16,7 @@ class Prompt:
 
         assert prompt_file.endswith(".toml"), "Prompt file should be a TOML file."
         self.prompt_file = prompt_file
-        self.data = self.load_toml(self.prompt_file)
+        self.data, self.raw_data = self.load_toml(self.prompt_file)
         self.md5_hash = hashlib.md5(str(self.data).encode()).hexdigest()
         self.version = self.data["METADATA"]["version"]
 
@@ -57,12 +57,15 @@ class Prompt:
         return processed_schema
     
     def get_schemas(self):
-        schemas = self.process_schema(self.data["SCHEMAS"].values())
+        if "SCHEMAS" in self.data:
+            schemas = self.process_schema(self.data["SCHEMAS"].values())
+        else:
+            schemas = []
         if len(schemas) == 0:
-            schemas = {
+            schemas = [{
                 "variable_name": "default",
                 "type": "default",
-            }
+            }]
         if self.debug:
             print("\ninit_schema")
             print(self.schemas)
@@ -107,7 +110,12 @@ class Prompt:
                 
     def load_toml(self, path):
         with open(path, "rb") as f:
-            return tomllib.load(f)
+            data = tomllib.load(f)
+
+        with open(path, "r") as f:
+            raw_data = f.read()
+            
+        return data, raw_data
 
     def replace_placeholders(self, item):
         for key in item:

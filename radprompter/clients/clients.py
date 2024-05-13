@@ -19,20 +19,22 @@ class Client():
 class OpenAIClient(Client):
     def __init__(self, model, **kwargs):
         Client.__init__(self, model)
+        self.seed = kwargs.pop("seed", 42)
+        self.temperature = kwargs.pop("temperature", 0.0)
+        self.frequency_penalty = kwargs.pop("frequency_penalty", 1)
+        self.top_p = kwargs.pop("top_p", 1)
         self.client = OpenAI(**kwargs)
-        
-    def chat_complete(self, messages, stop, max_tokens, **kwargs):
+
+    def chat_complete(self, messages, stop, max_tokens):
         completion = self.client.chat.completions.create(
             model=self.model,
             messages=messages,
-            frequency_penalty=1,
             stream=False,
-            seed=42,
-            temperature=0.0,
+            seed=self.seed,
+            temperature=self.temperature,
             stop=stop,
-            logprobs=False,
-            top_logprobs=0,
-            top_p=1.0,
+            top_p=self.top_p,
+            frequency_penalty=self.frequency_penalty,
             max_tokens=max_tokens,
         )
         return completion.choices[0].message.content
@@ -45,20 +47,22 @@ class vLLMClient(Client):
         
         if "base_url" not in kwargs:
             raise ValueError("base_url must be provided for vLLMClient")
+        self.seed = kwargs.pop("seed", 42)
+        self.temperature = kwargs.pop("temperature", 0.0)
+        self.frequency_penalty = kwargs.pop("frequency_penalty", 1)
+        self.top_p = kwargs.pop("top_p", 1)
         self.client = OpenAI(**kwargs)
-        
-    def chat_complete(self, messages, stop, max_tokens, **kwargs):
+
+    def chat_complete(self, messages, stop, max_tokens):
         completion = self.client.chat.completions.create(
             model=self.model,
             messages=messages,
-            frequency_penalty=1,
             stream=False,
-            seed=42,
-            temperature=0.0,
+            seed=self.seed,
+            temperature=self.temperature,
             stop=stop,
-            logprobs=False,
-            top_logprobs=0,
-            top_p=1.0,
+            top_p=self.top_p,
+            frequency_penalty=self.frequency_penalty,
             max_tokens=max_tokens,
         )
         return completion.choices[0].message.content

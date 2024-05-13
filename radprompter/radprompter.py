@@ -5,11 +5,10 @@ from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 class RadPrompter():
-    def __init__(self, client, prompt, hide_blocks=False, sanitize_response=True, concurrency=1):
+    def __init__(self, client, prompt, hide_blocks=False, concurrency=1):
         self.client = client
         self.prompt = prompt
         self.hide_blocks = hide_blocks
-        self.sanitize_response = sanitize_response
         self.concurrency = concurrency
         self.log = {
             "Model": self.client.model,
@@ -47,8 +46,8 @@ class RadPrompter():
                     {"role": "system", "content": prompt.system_prompt},
                 ]
 
-        if (len(item_response) == 1 and prompt.schemas['variable_name'] == "default"):
-            item_response = item_response[0]
+        if (len(item_response) == 1 and prompt.schemas[0]['variable_name'] == "default"):
+            item_response = item_response[0]['default']
         
         return item_response
 
@@ -80,4 +79,12 @@ class RadPrompter():
             for key, value in self.log.items():
                 f.write(f"{key}: {value}\n")
                 
+            f.write("\n\n")
+            f.write("-"*20)
+            f.write(" *** - Prompt Content - *** ")
+            f.write("-"*20)
+            f.write("\n")
+            f.write(self.prompt.raw_data)
+            
+            f.close()
         
