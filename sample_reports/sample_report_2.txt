@@ -1,0 +1,17 @@
+Clinical Information:
+72-year-old female with sudden onset shortness of breath and hypoxia. Evaluate for pulmonary embolism.
+Technique:
+CT pulmonary angiography with IV contrast was performed.
+Findings:
+There is a large saddle embolus extending from the main pulmonary artery into the right and left main pulmonary arteries. Multiple filling defects are also seen within the segmental and subsegmental branches bilaterally, indicating additional pulmonary emboli.
+The right ventricle appears dilated at 4.6 cm, greater than the left ventricle. There is flattening of the interventricular septum, suggesting right heart strain.
+Mosaic perfusion is present within the lungs bilaterally, likely representing pulmonary infarcts.
+Small bilateral pleural effusions are noted.
+Impression:
+
+Saddle pulmonary embolism involving the main pulmonary artery, right and left main branches, and multiple segmental/subsegmental branches.
+Findings of right heart strain with right ventricular dilation and interventricular septal flattening.
+Bilateral pleural effusions, likely due to pulmonary infarcts.
+
+Recommendation:
+Emergent anticoagulation therapy is recommended given the large burden of pulmonary arterial clot and evidence of right heart strain. Surgical or catheter-based embolectomy may need to be considered. Echocardiography can further evaluate right heart function and pulmonary pressures.

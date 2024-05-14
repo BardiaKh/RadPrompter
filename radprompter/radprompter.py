@@ -1,3 +1,4 @@
+import os
 from copy import deepcopy
 from tqdm import tqdm
 import tomllib
@@ -5,7 +6,7 @@ from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 class RadPrompter():
-    def __init__(self, client, prompt, hide_blocks=False, concurrency=1):
+    def __init__(self, client, prompt, hide_blocks=False, concurrency=1, output_directory=None):
         self.client = client
         self.prompt = prompt
         self.hide_blocks = hide_blocks
@@ -17,6 +18,7 @@ class RadPrompter():
             "Prompt Hash": self.prompt.md5_hash,
             "Concurrency Factor": self.concurrency,
         }
+        self.output_directory = output_directory
         
     def process_single_item(self, item):
         prompt = deepcopy(self.prompt)
@@ -58,14 +60,27 @@ class RadPrompter():
         self.log['Start Time'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         with ThreadPoolExecutor(max_workers=self.concurrency) as executor:
             futures = []
+            report_ids = []
             for item in items:
+                report_ids.append(item['report_id'])
                 future = executor.submit(self.process_single_item, item)
                 futures.append(future)
 
             results = []
-            for future in tqdm(as_completed(futures), total=len(futures), desc="Processing items"):
+            for i, future in enumerate(tqdm(as_completed(futures), total=len(futures), desc="Processing items")):
                 result = future.result()
+                result.insert(0, {"report_id": [report_ids[i]]})
                 results.append(result)
+                
+                # save result
+                if self.output_directory is not None:
+                    if not os.path.exists(self.output_directory):
+                        os.makedirs(self.output_directory)
+                    output_dir = os.path.join(self.output_directory, f"{report_ids[i]}")
+                    with open(output_dir, "w") as f:
+                        for item in result:
+                            f.write(str(item))
+                            f.write("\n")
 
         self.log['End Time'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         self.log['Duration'] = (datetime.strptime(self.log['End Time'], '%Y-%m-%d %H:%M:%S') - 
@@ -87,4 +102,3 @@ class RadPrompter():
             f.write(self.prompt.raw_data)
             
             f.close()
-        
