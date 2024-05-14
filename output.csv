@@ -1,0 +1,66 @@
+"index","Pulmonary Embolism_response","Left_response","Right_response","Acute_response","Chronic_response","RightHeartStrain_response","PulmonaryArteryHypertension_response","report","report_id"
+"0","Present","Yes","Yes","Yes","No","Yes","No","Clinical Information:
+72-year-old female with sudden onset shortness of breath and hypoxia. Evaluate for pulmonary embolism.
+Technique:
+CT pulmonary angiography with IV contrast was performed.
+Findings:
+There is a large saddle embolus extending from the main pulmonary artery into the right and left main pulmonary arteries. Multiple filling defects are also seen within the segmental and subsegmental branches bilaterally, indicating additional pulmonary emboli.
+The right ventricle appears dilated at 4.6 cm, greater than the left ventricle. There is flattening of the interventricular septum, suggesting right heart strain.
+Mosaic perfusion is present within the lungs bilaterally, likely representing pulmonary infarcts.
+Small bilateral pleural effusions are noted.
+Impression:
+
+Saddle pulmonary embolism involving the main pulmonary artery, right and left main branches, and multiple segmental/subsegmental branches.
+Findings of right heart strain with right ventricular dilation and interventricular septal flattening.
+Bilateral pleural effusions, likely due to pulmonary infarcts.
+
+Recommendation:
+Emergent anticoagulation therapy is recommended given the large burden of pulmonary arterial clot and evidence of right heart strain. Surgical or catheter-based embolectomy may need to be considered. Echocardiography can further evaluate right heart function and pulmonary pressures.","sample_report_2.txt"
+"1","Present","Yes","Yes","No","No","No","No","Here is an example radiology report describing subsegmental pulmonary emboli:
+
+Clinical Information:
+65-year-old male with history of recent surgery presenting with pleuritic chest pain. Rule out pulmonary embolism.
+
+Technique:
+CT pulmonary angiogram with IV contrast was performed.
+
+Findings: 
+The main pulmonary arteries are patent and normal in caliber. No evidence of central pulmonary embolism.
+
+There are few subsegmental pulmonary arterial filling defects identified within the right lower lobe and left upper lobe, compatible with subsegmental pulmonary emboli.
+
+No large pulmonary infarcts are seen. Minimal bibasilar atelectasis is present.
+
+The heart size and pulmonary vascularity are within normal limits. No pleural effusions.
+
+Impression:
+1. Subsegmental pulmonary emboli within the right lower lobe and left upper lobe.
+2. No central pulmonary emboli or evidence of right heart strain.
+3. Minimal bibasilar atelectasis.
+
+Recommendation:
+Clinical correlation is recommended regarding need for anticoagulation given the subsegmental nature of the emboli. Follow-up imaging can be considered if symptoms persist or worsen to evaluate for interval development of more proximal clot propagation.
+
+Patient should be clinically risk stratified for bleeding risk versus benefit of anticoagulation for subsegmental pulmonary emboli based on symptoms and risk factors.","sample_report_3.txt"
+"2","Present","Yes","Yes","No","Yes","No","Yes","Clinical Information:
+67-year-old male with shortness of breath and pleuritic chest pain. Rule out pulmonary embolism.
+
+Technique:
+CT pulmonary angiography with IV contrast was performed.
+
+Findings:
+There are filling defects within the right and left main pulmonary arteries extending into the lobar branches, compatible with bilateral pulmonary emboli. No evidence of right heart strain.
+
+Ground glass opacities are present within the peripheral lungs bilaterally, suggesting a component of hemorrhage.
+
+The main pulmonary arteries are dilated, with a diameter of 3.4 cm on the right and 3.1 cm on the left (upper limits of normal).
+
+No pleural effusion is identified.
+
+Impression:
+1. Bilateral pulmonary emboli involving the right and left main pulmonary arteries and lobar branches.
+2. Findings suggestive of pulmonary hemorrhage.
+3. Pulmonary artery dilation suggesting chronic pulmonary hypertension.
+
+Recommendation:
+Clinical correlation is recommended. Anticoagulation therapy should be initiated if not already started. Consider echocardiography to evaluate for right heart strain.","sample_report_1.txt"

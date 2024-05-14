@@ -1,15 +1,20 @@
 import os
-from copy import deepcopy
 from tqdm import tqdm
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
+import csv
 
 class RadPrompter():
-    def __init__(self, client, prompt, hide_blocks=False, output_directory=None, concurrency=1):
+    def __init__(self, client, prompt, output_file, hide_blocks=False, concurrency=1):
         self.client = client
         self.prompt = prompt
         self.hide_blocks = hide_blocks
         self.concurrency = concurrency
+        self.output_file = output_file
+        assert self.output_file.endswith(".csv"), "Output file must be a .csv file"
+        file_exists = os.path.isfile(self.output_file)
+        if file_exists:
+            print(f"Output file {self.output_file} already exists. Appending to it. If you want to create a new file, please delete the existing file first or pass a new file name.")
         self.log = {
             "Model": self.client.model,
             "Prompt TOML": self.prompt.prompt_file,
@@ -17,10 +22,10 @@ class RadPrompter():
             "Prompt Hash": self.prompt.md5_hash,
             "Concurrency Factor": self.concurrency,
         }
-        self.output_directory = output_directory
+
         
     def process_single_item(self, item, index):
-        prompt = deepcopy(self.prompt)
+        prompt = self.prompt.copy()
         prompt.replace_placeholders(item)
             
         messages = [
@@ -29,7 +34,7 @@ class RadPrompter():
         item_response = []
         for schema in prompt.schemas:
             schema_response = []
-            prompt_with_schema = deepcopy(prompt)
+            prompt_with_schema = prompt.copy()
             prompt_with_schema.replace_placeholders(schema)
         
             for i in range(prompt.num_turns):
@@ -40,7 +45,12 @@ class RadPrompter():
                 response, messages = self.client.ask_model(messages, prompt_with_schema.stop_tags[i])
                 schema_response.append(response)
             
-            item_response.append({f"{schema['variable_name']}":schema_response})
+            if len(schema_response) == 1:
+                item_response.append({f"{schema['variable_name']}_response":schema_response[0]})
+            else:
+                for r, schema_response in enumerate(schema_response):    
+                    item_response.append({f"{schema['variable_name']}_response_{r}":schema_response[r]})
+                    print(f"{schema['variable_name']}_response_{r}")
             
             if self.hide_blocks:
                 messages = [
@@ -60,37 +70,39 @@ class RadPrompter():
                 future = executor.submit(self.process_single_item, item, index)
                 futures.append(future)
 
-            results = []
-            for i, future in enumerate(tqdm(as_completed(futures), total=len(futures), desc="Processing items")):
-                index, result = future.result()
-                result.insert(0, {"index": index})
-                result_keys = [list(r.keys())[0] for r in result]
-                file_name = f"{index}.txt"
-                for key, value in items[index].items():
-                    if key not in result_keys:
-                        if key == "filename":
-                            file_name = f"{value}.txt"
-                        else:
-                            result.append({key: value})
-                
-                results.append(result)
-                
-                # save interim results
-                if self.output_directory is not None:
-                    if not os.path.exists(self.output_directory):
-                        os.makedirs(self.output_directory)
-                    output_dir = os.path.join(self.output_directory, file_name)
-                    with open(output_dir, "w") as f:
-                        for item in result:
-                            f.write(str(item))
-                            f.write("\n")
+            if self.output_file is not None:
+                with open(self.output_file, "a", newline="") as f:
+                    writer = csv.writer(f, quoting=csv.QUOTE_ALL)
+                    header_written = False
+
+                    for i, future in enumerate(tqdm(as_completed(futures), total=len(futures), desc="Processing items")):
+                        index, result = future.result()
+                        result.insert(0, {"index": index})
+                        result_keys = [list(r.keys())[0] for r in result]
+                        for key, value in items[index].items():
+                            if key not in result_keys:
+                                result.append({key: value})
+
+                        if not header_written:
+                            # Write header only if it hasn't been written yet
+                            header = [key for r in result for key in r.keys()]
+                            writer.writerow(header)
+                            header_written = True
+
+                        row = []
+                        for r in result:
+                            key = list(r.keys())[0]
+                            value = r[key]
+                            if isinstance(value, list):
+                                value = "|".join(str(v) for v in value)
+                            row.append(value)
+                        writer.writerow(row)
 
         self.log['End Time'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         self.log['Duration'] = (datetime.strptime(self.log['End Time'], '%Y-%m-%d %H:%M:%S') - 
                                 datetime.strptime(self.log['Start Time'], '%Y-%m-%d %H:%M:%S')).total_seconds()
         self.log['Number of Items'] = len(items)
         self.log['Average Processing Time'] = self.log['Duration'] / self.log['Number of Items']                
-        return results
     
     def save_log(self, log_dir="./RadPrompter.log"):
         with open(log_dir, "w") as f:

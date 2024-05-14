@@ -4,6 +4,8 @@ import pickle
 import datetime
 import tomllib
 import hashlib
+from copy import deepcopy
+
 try: 
     from IPython.display import HTML, display
     from IPython import get_ipython
@@ -34,6 +36,9 @@ class Prompt:
         
         assert len(self.user_prompts) == len(self.response_templates) == len(self.stop_tags), "Number of user prompts, response templates, and stop tags should be the same."
     
+    def copy(self):
+        return deepcopy(self)
+
     def process_schema(self, schema):
         processed_schema = []
         for item in schema:
@@ -68,9 +73,9 @@ class Prompt:
             }]
         if self.debug:
             print("\ninit_schema")
-            print(self.schemas)
+            print(schemas)
             
-        return schemas
+        return Schemas(self, schemas)
             
     def process_rdp(self, string):
         def replace_rdp(match):
@@ -145,6 +150,12 @@ class Prompt:
 
         return True
         
+    def __getitem__(self, index):
+        schema = self.schemas[index]
+        prompt_copy = self.copy()
+        prompt_copy.replace_placeholders(schema)
+        return prompt_copy
+
     def __str__(self):
         return self.__repr__()
 
@@ -204,15 +215,18 @@ class Prompt:
     
     def _highlight_placeholders(self, text):
         return text.replace("{{", "<span style='background-color: rgb(255, 224, 178, 0.3);'>{{").replace("}}", "}}</span>")
-
-    def save(self, path):
-        path = path if path.endswith(".rdp") else path + ".rdp"
-        with open(path, "wb") as f:
-            pickle.dump(self, f)
-            
-    def load(self, path):
-        # Load the object from the file
-        with open(path, "rb") as f:
-            obj = pickle.load(f)
-        return obj
     
+    
+class Schemas:
+    def __init__(self, prompt, schemas):
+        self.prompt = prompt
+        self.schemas = schemas
+
+    def __getitem__(self, index):
+        schema = self.schemas[index]
+        prompt_copy = self.prompt.copy()
+        prompt_copy.replace_placeholders(schema)
+        return prompt_copy
+
+    def __len__(self):
+        return len(self.schemas)
