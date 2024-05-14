@@ -1,0 +1,26 @@
+Here is an example radiology report describing subsegmental pulmonary emboli:
+
+Clinical Information:
+65-year-old male with history of recent surgery presenting with pleuritic chest pain. Rule out pulmonary embolism.
+
+Technique:
+CT pulmonary angiogram with IV contrast was performed.
+
+Findings: 
+The main pulmonary arteries are patent and normal in caliber. No evidence of central pulmonary embolism.
+
+There are few subsegmental pulmonary arterial filling defects identified within the right lower lobe and left upper lobe, compatible with subsegmental pulmonary emboli.
+
+No large pulmonary infarcts are seen. Minimal bibasilar atelectasis is present.
+
+The heart size and pulmonary vascularity are within normal limits. No pleural effusions.
+
+Impression:
+1. Subsegmental pulmonary emboli within the right lower lobe and left upper lobe.
+2. No central pulmonary emboli or evidence of right heart strain.
+3. Minimal bibasilar atelectasis.
+
+Recommendation:
+Clinical correlation is recommended regarding need for anticoagulation given the subsegmental nature of the emboli. Follow-up imaging can be considered if symptoms persist or worsen to evaluate for interval development of more proximal clot propagation.
+
+Patient should be clinically risk stratified for bleeding risk versus benefit of anticoagulation for subsegmental pulmonary emboli based on symptoms and risk factors.

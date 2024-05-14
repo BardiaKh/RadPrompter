@@ -1,0 +1,22 @@
+Clinical Information:
+67-year-old male with shortness of breath and pleuritic chest pain. Rule out pulmonary embolism.
+
+Technique:
+CT pulmonary angiography with IV contrast was performed.
+
+Findings:
+There are filling defects within the right and left main pulmonary arteries extending into the lobar branches, compatible with bilateral pulmonary emboli. No evidence of right heart strain.
+
+Ground glass opacities are present within the peripheral lungs bilaterally, suggesting a component of hemorrhage.
+
+The main pulmonary arteries are dilated, with a diameter of 3.4 cm on the right and 3.1 cm on the left (upper limits of normal).
+
+No pleural effusion is identified.
+
+Impression:
+1. Bilateral pulmonary emboli involving the right and left main pulmonary arteries and lobar branches.
+2. Findings suggestive of pulmonary hemorrhage.
+3. Pulmonary artery dilation suggesting chronic pulmonary hypertension.
+
+Recommendation:
+Clinical correlation is recommended. Anticoagulation therapy should be initiated if not already started. Consider echocardiography to evaluate for right heart strain.
