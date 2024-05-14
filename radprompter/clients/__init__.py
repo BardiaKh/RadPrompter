@@ -1,1 +1,1 @@
-from .clients import OpenAIClient, vLLMClient
+from .clients import OpenAIClient, vLLMClient, OllamaClient

@@ -33,7 +33,7 @@ Provide a single answer:
 """
 
 [CONSTRUCTOR]
-system = "rdp(SYS_PROMPT)"
+system = "rdp(system_prompt)"
 user = [
 "rdp(user_prompt_intro + user_prompt_no_cot)"
 ]

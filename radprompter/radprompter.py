@@ -1,12 +1,11 @@
 import os
 from copy import deepcopy
 from tqdm import tqdm
-import tomllib
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 class RadPrompter():
-    def __init__(self, client, prompt, hide_blocks=False, concurrency=1, output_directory=None):
+    def __init__(self, client, prompt, hide_blocks=False, output_directory=None, concurrency=1):
         self.client = client
         self.prompt = prompt
         self.hide_blocks = hide_blocks
@@ -20,7 +19,7 @@ class RadPrompter():
         }
         self.output_directory = output_directory
         
-    def process_single_item(self, item):
+    def process_single_item(self, item, index):
         prompt = deepcopy(self.prompt)
         prompt.replace_placeholders(item)
             
@@ -47,11 +46,8 @@ class RadPrompter():
                 messages = [
                     {"role": "system", "content": prompt.system_prompt},
                 ]
-
-        if (len(item_response) == 1 and prompt.schemas[0]['variable_name'] == "default"):
-            item_response = item_response[0]['default']
         
-        return item_response
+        return index, item_response
 
     def __call__(self, items):
         if not isinstance(items, list):
@@ -60,23 +56,30 @@ class RadPrompter():
         self.log['Start Time'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         with ThreadPoolExecutor(max_workers=self.concurrency) as executor:
             futures = []
-            report_ids = []
-            for item in items:
-                report_ids.append(item['report_id'])
-                future = executor.submit(self.process_single_item, item)
+            for index, item in enumerate(items):
+                future = executor.submit(self.process_single_item, item, index)
                 futures.append(future)
 
             results = []
             for i, future in enumerate(tqdm(as_completed(futures), total=len(futures), desc="Processing items")):
-                result = future.result()
-                result.insert(0, {"report_id": [report_ids[i]]})
+                index, result = future.result()
+                result.insert(0, {"index": index})
+                result_keys = [list(r.keys())[0] for r in result]
+                file_name = f"{index}.txt"
+                for key, value in items[index].items():
+                    if key not in result_keys:
+                        if key == "filename":
+                            file_name = f"{value}.txt"
+                        else:
+                            result.append({key: value})
+                
                 results.append(result)
                 
-                # save result
+                # save interim results
                 if self.output_directory is not None:
                     if not os.path.exists(self.output_directory):
                         os.makedirs(self.output_directory)
-                    output_dir = os.path.join(self.output_directory, f"{report_ids[i]}")
+                    output_dir = os.path.join(self.output_directory, file_name)
                     with open(output_dir, "w") as f:
                         for item in result:
                             f.write(str(item))
