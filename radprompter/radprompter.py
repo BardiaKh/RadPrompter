@@ -1,4 +1,5 @@
 import os
+from copy import deepcopy
 from tqdm import tqdm
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -25,17 +26,16 @@ class RadPrompter():
 
         
     def process_single_item(self, item, index):
-        prompt = self.prompt.copy()
-        prompt.replace_placeholders(item)
+        prompt = deepcopy(self.prompt)
             
         messages = [
             {"role": "system", "content": prompt.system_prompt},
         ]
         item_response = []
-        for schema in prompt.schemas:
+        for schema in prompt.schemas.schemas:
             schema_response = []
-            prompt_with_schema = prompt.copy()
-            prompt_with_schema.replace_placeholders(schema)
+            prompt_with_schema = deepcopy(prompt)
+            prompt_with_schema.replace_placeholders(schema | item)
         
             for i in range(prompt.num_turns):
                 messages.append({"role": "user", "content": prompt_with_schema.user_prompts[i]})
@@ -48,10 +48,9 @@ class RadPrompter():
             if len(schema_response) == 1:
                 item_response.append({f"{schema['variable_name']}_response":schema_response[0]})
             else:
-                for r, schema_response in enumerate(schema_response):    
-                    item_response.append({f"{schema['variable_name']}_response_{r}":schema_response[r]})
-                    print(f"{schema['variable_name']}_response_{r}")
-            
+                for r, schema_response_ in enumerate(schema_response):    
+                    item_response.append({f"{schema['variable_name']}_response_{r}":schema_response_})
+                        
             if self.hide_blocks:
                 messages = [
                     {"role": "system", "content": prompt.system_prompt},

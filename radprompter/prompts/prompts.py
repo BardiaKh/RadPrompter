@@ -26,19 +26,21 @@ class Prompt:
         self.user_prompts = self.init_constructor_component("user")
         self.response_templates = self.init_constructor_component("response_templates")
         self.stop_tags = self.init_constructor_component("stop_tags")
-
-        self.schemas = self.get_schemas()
-        
         self.num_turns = len(self.user_prompts)
+        
+        self.schemas = self.get_schemas()
+
+        if self.response_templates is None:
+            self.response_templates = [""]*self.num_turns
+            
+        if self.stop_tags is None:
+            self.stop_tags = [""]*self.num_turns        
         
         if self.debug:
             print(self.num_turns)
         
         assert len(self.user_prompts) == len(self.response_templates) == len(self.stop_tags), "Number of user prompts, response templates, and stop tags should be the same."
     
-    def copy(self):
-        return deepcopy(self)
-
     def process_schema(self, schema):
         processed_schema = []
         for item in schema:
@@ -99,10 +101,16 @@ class Prompt:
         return processed_string
     
     def init_constructor_component(self, component):
+        if component not in self.data["CONSTRUCTOR"] and component not in ["system", "user"]:
+            return None
+                    
         component_data = self.data["CONSTRUCTOR"][component]
         if component == "system":
             component_data = self.process_rdp(component_data)
         else:
+            if isinstance(component_data, str):
+                component_data = [component_data]
+
             component_data = [self.process_rdp(i) for i in component_data]
         
         
@@ -152,7 +160,7 @@ class Prompt:
         
     def __getitem__(self, index):
         schema = self.schemas[index]
-        prompt_copy = self.copy()
+        prompt_copy = deepcopy(self)
         prompt_copy.replace_placeholders(schema)
         return prompt_copy
 
@@ -224,7 +232,7 @@ class Schemas:
 
     def __getitem__(self, index):
         schema = self.schemas[index]
-        prompt_copy = self.prompt.copy()
+        prompt_copy = deepcopy(self.prompt)
         prompt_copy.replace_placeholders(schema)
         return prompt_copy
 
