@@ -1,0 +1,124 @@
+
+[METADATA]
+
+version = 0.1
+description = "A sample prompt for RadPrompter with no CoT"
+
+[PROMPTS]
+
+system_prompt = "You are a helpful assistant that has 20 years of experience in reading radiology reports and extracting data elements."
+
+user_prompt_intro = "{{intro_prompt}}"
+
+user_prompt_no_cot = """
+I want you to extract the following data element from the report: 
+{{hint}}
+
+Provide a single answer:
+
+"""
+
+[CONSTRUCTOR]
+system = "rdp(system_prompt)"
+user = [
+"rdp(user_prompt_intro + user_prompt_no_cot)"
+]
+stop_tags = [
+" "
+]
+
+
+[SCHEMAS]
+[SCHEMAS.PulmonaryEmbolism]
+variable_name = "Pulmonary Embolism"
+intro_prompt = """
+Carefully review the provided chest CT report (in the <report> tag). Ensure that each data element is accurately captured.
+
+Here is the report:
+<report>
+{{report}}
+</report>
+
+Please pay attention to the following details:
+- Your attention to detail is crucial for maintaining the integrity of the medical records. 
+- You should not confabulate information, and if something is not mentioned, you should assume that it is `Absent` unless otherwise stated.
+- The report may contain additional information that is not relevant to the requested data elements. Please ignore that information.
+- We are interested at findings at the time of scan, not the previous ones, so only consider the impression and findings sections of the report.
+- Do not print anything else other than the provided output format.
+"""
+type = "select"
+options = ["Present", "Absent"]
+show_options_in_hint = true
+hint = """
+Indicate `Present` if the report explicitly mentions the patient has pulmonary embolism in their CT scan. 
+Indicate `Absent` if pulmonary embolism is not seen or if a previously observed pulmonary embolism is mentioned as resolved.
+"""
+
+[SCHEMAS.Left]
+variable_name = "Left"
+intro_prompt = ""
+type = "select"
+options = ["Yes", "No"]
+show_options_in_hint = true
+hint = """
+Indicate `Yes` if the report explicitly mentions the patient has a left-sided pulmonary embolism in their CT scan. 
+Indicate `Yes` if the report explicitly mentions the patient has a bilateral pulmonary embolism in their CT scan or if patient has both left and right sided pulmonary embolism.
+Indicate `No` if the report doesn't explicitly mentions the patient has a left-sided or bilateral pulmonary embolism in their CT scan. 
+"""
+
+[SCHEMAS.Right]
+variable_name = "Right"
+type = "select"
+intro_prompt = ""
+options = ["Yes", "No"]
+show_options_in_hint = true
+hint = """
+Indicate `Yes` if the report explicitly mentions the patient has a right-sided pulmonary embolism in their CT scan. 
+Indicate `Yes` if the report explicitly mentions the patient has a bilateral pulmonary embolism in their CT scan or if patient has both left and right sided pulmonary embolism.
+Indicate `No` if the report doesn't explicitly mentions the patient has a right-sided or bilateral pulmonary embolism in their CT scan. 
+"""
+
+[SCHEMAS.Acute]
+variable_name = "Acute"
+type = "select"
+intro_prompt = ""
+options = ["Yes", "No"]
+show_options_in_hint = true
+hint = """
+Indicate `Yes` if the report explicitly mentions the patient has an acute pulmonary embolism in their CT scan. 
+Indicate `No` if the report doesn't explicitly mentions the patient has an acute pulmonary embolism in their CT scan. 
+"""
+
+[SCHEMAS.Chronic]
+variable_name = "Chronic"
+type = "select"
+intro_prompt = ""
+options = ["Yes", "No"]
+show_options_in_hint = true
+hint = """
+Indicate `Yes` if the report explicitly mentions the patient has an chronic pulmonary embolism in their CT scan. 
+Indicate `No` if the report doesn't explicitly mentions the patient has an chronic pulmonary embolism in their CT scan. 
+"""
+
+
+[SCHEMAS.RightHeartStrain]
+variable_name = "RightHeartStrain"
+type = "select"
+intro_prompt = ""
+options = ["Yes", "No"]
+show_options_in_hint = true
+hint = """
+Indicate `Yes` if the report does explicitly mentions that the patient has a right heart strain in their CT scan. 
+Indicate `No` if the report doesn't explicitly mentions that the patient has a right heart strain in their CT scan. 
+"""
+
+[SCHEMAS.PulmonaryArteryHypertension]
+variable_name = "PulmonaryArteryHypertension"
+type = "select"
+intro_prompt = ""
+options = ["Yes", "No"]
+show_options_in_hint = true
+hint = """
+Indicate `Yes` if the report does explicitly mentions that the patient has a pulmonary artery hypertension in their CT scan. 
+Indicate `No` if the report doesn't explicitly mentions that the patient has a pulmonary artery hypertension in their CT scan. 
+"""
