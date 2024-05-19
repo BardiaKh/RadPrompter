@@ -27,7 +27,7 @@ Your final answer elements in a valid JSON format and is between <json> and </js
 assistant_response_template = """
 <json>
 {
-  "{{variable_name}}" : """
+  "{{variable_name}}" : \""""
 
 [CONSTRUCTOR]
 system = "rdp(system_prompt)"
