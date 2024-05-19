@@ -128,7 +128,7 @@ class RadPrompter():
             f.close()
             
     def sanitize_json(self, variable_name="all"):
-        df = pd.read_csv(self.output_file)
+        df = pd.read_csv(self.output_file, index_col='index')
 
         if variable_name == "all":
             for schema in self.prompt.schemas.schemas:
