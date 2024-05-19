@@ -1,7 +1,6 @@
+import os
 import re
 import html
-import pickle
-import datetime
 import tomllib
 import hashlib
 from copy import deepcopy
@@ -17,7 +16,7 @@ class Prompt:
         self.debug = debug
 
         assert prompt_file.endswith(".toml"), "Prompt file should be a TOML file."
-        self.prompt_file = prompt_file
+        self.prompt_file = os.path.abspath(prompt_file)
         self.data, self.raw_data = self.load_toml(self.prompt_file)
         self.md5_hash = hashlib.md5(str(self.data).encode()).hexdigest()
         self.version = self.data["METADATA"]["version"]
