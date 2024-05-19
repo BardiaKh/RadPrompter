@@ -5,7 +5,7 @@ from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from .clients import OpenAIClient
 import csv
-from __init__ import __version__
+from radprompter import __version__
 
 class RadPrompter():
     def __init__(self, client, prompt, output_file, hide_blocks=False, concurrency=1):

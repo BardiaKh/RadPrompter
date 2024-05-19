@@ -4,4 +4,4 @@ from .radprompter import RadPrompter
 from .prompts import Prompt
 from .clients import OpenAIClient, vLLMClient, OllamaClient
 
-__version__ = "1.0.5"
+__version__ = "1.0.6"
