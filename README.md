@@ -1,3 +1,5 @@
+![RadPrompter](./logo.png)
+
 # RadPrompter
 
 RadPrompter is a Python package for simplified and reproducible LLM prompting, particularly tailored for biomedical applications, including Radiology.
