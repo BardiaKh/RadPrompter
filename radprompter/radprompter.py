@@ -5,6 +5,7 @@ from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from .clients import OpenAIClient
 import csv
+from __init__ import __version__
 
 class RadPrompter():
     def __init__(self, client, prompt, output_file, hide_blocks=False, concurrency=1):
@@ -24,6 +25,7 @@ class RadPrompter():
             self.prompt.response_templates = [""]*prompt.num_turns
         
         self.log = {
+            "RadPrompter Version": __version__,
             "Model": self.client.model,
             "Prompt TOML": self.prompt.prompt_file,
             "Prompt Version": self.prompt.version,
