@@ -2,13 +2,13 @@
 [METADATA]
 
 version = 0.1
-description = "A sample prompt for RadPrompter with no CoT"
+description = "A sample prompt for RadPrompter"
 
 [PROMPTS]
 
 system_prompt = "You are a helpful assistant that has 20 years of experience in reading radiology reports and extracting data elements."
 
-user_prompt_intro = "{{intro_prompt}}"
+user_prompt_intro = "{{intro_prompt}}\n"
 
 user_prompt_no_cot = """
 I want you to extract the following data element from the report: 

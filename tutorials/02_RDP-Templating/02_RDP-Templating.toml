@@ -1,0 +1,50 @@
+[METADATA]
+
+version = 0.1
+description = "A sample prompt for RadPrompter"
+
+[PROMPTS]
+
+system_prompt = "You are a helpful assistant that has 20 years of experience in reading radiology reports and extracting data elements."
+
+user_prompt_intro = """
+Carefully review the provided chest CT report (in the <report> tag). Ensure that each data element is accurately captured.
+
+Here is the report:
+<report>
+{{report}}
+</report>"""
+
+user_prompt_cot = """
+I want you to extract the following data element from the report:
+'Pulmonary Embolism'
+Here are your options and you can explicitly use one of these:
+- `Present`
+- `Absent`
+
+Hint: "Indicate `Present` if the report explicitly mentions the patient has pulmonary embolism in their CT scan.
+Indicate `Absent` if pulmonary embolism is not seen or if a previously observed pulmonary embolism is mentioned as resolved.
+
+After you provide the data element, I will ask you to provide an explanation and then the final answer.
+
+Now give your initial answer. Then provide a step-by-step explanation based on the information in the report, using no more than three short sentences. You can use less sentences if needed.Try to critically appraise your initial answer, which MIGHT be wrong. Then give me your final answer. Format your answers with this format as:
+
+<answer>
+<initial_answer>
+initial answer goes here
+</initial_answer>
+<explanation>
+1. your first explanation goes here
+2. your second explanation goes here (if needed)
+3. your third explanation goes here (if needed)
+</explanation>
+<final_answer>
+final answer goes here
+</final_answer>
+</answer>
+"""
+
+[CONSTRUCTOR]
+system = "rdp(system_prompt)"
+user = "rdp(user_prompt_intro + user_prompt_cot)"
+stop_tags = "</answer>"

@@ -1,4 +1,6 @@
 import os
+import pandas as pd
+import re
 from copy import deepcopy
 from tqdm import tqdm
 from datetime import datetime
@@ -124,3 +126,33 @@ class RadPrompter():
             f.write(self.prompt.raw_data)
             
             f.close()
+            
+    def sanitize_json(self, variable_name="all"):
+        df = pd.read_csv(self.output_file)
+
+        if variable_name == "all":
+            for schema in self.prompt.schemas.schemas:
+                if schema["type"] == "select":
+                    column_name = f"{schema['variable_name']}_response"
+                    options = schema["options"]
+                    df[column_name] = df[column_name].apply(lambda x: self._sanitize_response(x, options))
+        else:
+            schema = next((s for s in self.prompt.schemas.schemas if s["variable_name"] == variable_name), None)
+            if schema and schema["type"] == "select":
+                column_name = f"{schema['variable_name']}_response"
+                options = schema["options"]
+                df[column_name] = df[column_name].apply(lambda x: self._sanitize_response(x, options))
+
+        return df
+
+    def _sanitize_response(self, response, options):
+        matches = []
+        for option in options:
+            pattern = r'\b' + re.escape(option) + r'\b'
+            if re.search(pattern, response, re.IGNORECASE):
+                matches.append(option)
+
+        if len(matches) == 1:
+            return matches[0]
+        else:
+            return "**RECHECK** " + response
