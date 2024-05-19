@@ -30,7 +30,6 @@ class RadPrompter():
             "Prompt Hash": self.prompt.md5_hash,
             "Concurrency Factor": self.concurrency,
         }
-
         
     def process_single_item(self, item, index):
         prompt = deepcopy(self.prompt)

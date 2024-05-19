@@ -1,0 +1,13 @@
+[METADATA]
+
+version = 0.1
+description = "A sample prompt for RadPrompter"
+
+
+[CONSTRUCTOR]
+system = "You are an experienced radiologist that help users extract infromation from radiology reports."
+user = """"Does the following report indicate a normal or abnormal finding?
+{{report}}
+
+Just reply with "normal" or "abnormal" to indicate your answer, without any additional information.
+"""

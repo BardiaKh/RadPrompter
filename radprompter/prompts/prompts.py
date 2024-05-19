@@ -34,7 +34,7 @@ class Prompt:
             self.response_templates = [""]*self.num_turns
             
         if self.stop_tags is None:
-            self.stop_tags = [""]*self.num_turns        
+            self.stop_tags = [None]*self.num_turns        
         
         if self.debug:
             print(self.num_turns)

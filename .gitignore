@@ -1,6 +1,8 @@
 # Custom .gitignore for Python projects
 *.log
 output/
+tutorials/*/*.csv
+tutorials/*/*.log
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
