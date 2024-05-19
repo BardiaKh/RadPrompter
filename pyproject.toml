@@ -5,6 +5,7 @@ build-backend = "flit_core.buildapi"
 [project]
 name = "radprompter"
 authors = [{name = "Bardia Khosravi", email = "bardiakhosravi95@gmail.com"}, {name = "Theo Dapamede", email = "theo.dapamede@emory.edu"}]
+maintainers = [{name = "Bardia Khosravi", email = "bardiakhosravi95@gmail.com"}, {name = "Theo Dapamede", email = "theo.dapamede@emory.edu"}]
 readme = "README.md"
 license = {file = "LICENSE"}
 classifiers = ["License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)"]
