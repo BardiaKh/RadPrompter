@@ -3,6 +3,7 @@ from copy import deepcopy
 from tqdm import tqdm
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from .clients import OpenAIClient
 import csv
 
 class RadPrompter():
@@ -14,8 +15,14 @@ class RadPrompter():
         self.output_file = output_file
         assert self.output_file.endswith(".csv"), "Output file must be a .csv file"
         file_exists = os.path.isfile(self.output_file)
+        
         if file_exists:
-            print(f"Output file {self.output_file} already exists. Appending to it. If you want to create a new file, please delete the existing file first or pass a new file name.")
+            print(f"WARNING: Output file {self.output_file} already exists. Appending to it. If you want to create a new file, please delete the existing file first or pass a new file name.")
+        
+        if isinstance(self.client, OpenAIClient) and self.prompt.response_templates.count("") != prompt.num_turns:
+            print("WARNING: OpenAI client does not accept response templates and will be ignored.")
+            self.prompt.response_templates = [""]*prompt.num_turns
+        
         self.log = {
             "Model": self.client.model,
             "Prompt TOML": self.prompt.prompt_file,
