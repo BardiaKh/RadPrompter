@@ -6,7 +6,7 @@ from tqdm import tqdm
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import csv
-from .clients import OpenAIClient
+from .clients import OpenAIClient, HuggingFaceClient
 from .__version__ import __version__
 
 class RadPrompter():
@@ -25,6 +25,10 @@ class RadPrompter():
         if isinstance(self.client, OpenAIClient) and self.prompt.response_templates.count("") != prompt.num_turns:
             print("WARNING: OpenAI client does not accept response templates and will be ignored.")
             self.prompt.response_templates = [""]*prompt.num_turns
+            
+        if isinstance(self.client, HuggingFaceClient) and self.concurrency > 1:
+            print("WARNING: HuggingFace client does not support concurrency > 1 and will be set to 1.")
+            self.concurrency = 1
         
         self.log = {
             "RadPrompter Version": __version__,

@@ -2,5 +2,5 @@
 
 from .radprompter import RadPrompter
 from .prompts import Prompt
-from .clients import OpenAIClient, vLLMClient, OllamaClient
+from .clients import OpenAIClient, vLLMClient, OllamaClient, HuggingFaceClient
 from .__version__ import __version__

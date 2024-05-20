@@ -33,8 +33,8 @@ class HuggingFaceClient(Client):
 
         model_name = hf_model.__class__.__name__
         super().__init__(model_name)
-        self.tokenizer = hf_tokenizer
-        self.model = hf_model
+        self.hf_tokenizer = hf_tokenizer
+        self.hf_model = hf_model
         self.temperature = kwargs.pop("temperature", 0.7)
         self.top_p = kwargs.pop("top_p", 0.9)
         self.frequency_penalty = kwargs.pop("frequency_penalty", 0.0)
@@ -44,19 +44,29 @@ class HuggingFaceClient(Client):
         if max_tokens is None:
             max_tokens = self.max_tokens
 
-        tokenized_chat = self.tokenizer.apply_chat_template(
+        if messages[-1]['role'] == "assistant":
+            last_message = messages[-1]['content']
+            messages = messages[:-1]
+        else:
+            last_message = None
+            
+        tokenized_chat = self.hf_tokenizer.apply_chat_template(
             messages, 
             tokenize=True, 
             add_generation_prompt=True, 
             return_tensors="pt"
         )
+        
+        if last_message:
+            tokenized_last_message = self.hf_tokenizer.encode(last_message, return_tensors="pt", add_special_tokens=False)
+            tokenized_chat = torch.cat([tokenized_chat, tokenized_last_message], dim=-1)
 
         stopping_criteria_list = StoppingCriteriaList()
         if stop:
-            stopping_criteria_list.append(StopStringCriteria(stop, self.tokenizer))
+            stopping_criteria_list.append(StopStringCriteria(stop, self.hf_tokenizer))
 
-        outputs = self.model.generate(
-            tokenized_chat['input_ids'], 
+        outputs = self.hf_model.generate(
+            tokenized_chat, 
             max_new_tokens=max_tokens, 
             temperature=self.temperature, 
             top_p=self.top_p, 
@@ -64,5 +74,8 @@ class HuggingFaceClient(Client):
             stopping_criteria=stopping_criteria_list
         )
 
-        response = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
-        return response
+        prompt_size = tokenized_chat.size(-1)
+        answer_tokens = outputs[0, prompt_size:]
+        answer_text = self.hf_tokenizer.decode(answer_tokens, skip_special_tokens=True)
+
+        return answer_text
