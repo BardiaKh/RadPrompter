@@ -1,7 +1,8 @@
 import os
 import re
 import html
-import tomllib
+try: import tomllib
+except ModuleNotFoundError: import pip._vendor.tomli as tomllib
 import hashlib
 from copy import deepcopy
 
