@@ -65,6 +65,7 @@ For more details and advanced usage, check out our tutorials.
 | 03_Multiturn-Prompting      | Demonstrates multi-turn prompting                   | [📓](./tutorials/03_Multiturn-Prompting) |
 | 04_Using-Schemas            | Shows how to use schemas for structured output      | [📓](./tutorials/04_Using-Schemas)     |
 | 05_JSON-Prefill        | Covers using assistant prefills                     | [📓](./tutorials/05_JSON-Prefill)  |
+| 06_HuggingFace-Client        | Covers using the new `HuggingFaceClient`                     | [📓](./tutorials/06_HuggingFace-Client)  |
 
 ## Contributing
 
