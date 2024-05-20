@@ -27,10 +27,11 @@ class StopStringCriteria(StoppingCriteria):
         return torch.ones(input_ids.shape[0], dtype=torch.bool, device=input_ids.device)
 
 class HuggingFaceClient(Client):
-    def __init__(self, model_name, hf_model, hf_tokenizer, **kwargs):
+    def __init__(self, hf_model, hf_tokenizer, **kwargs):
         if os.environ['HAS_TRANSFORMERS'] != "True":
             raise ImportError("HuggingFaceClient requires the `transformers` package to be installed.")
-        
+
+        model_name = hf_model.__class__.__name__
         super().__init__(model_name)
         self.tokenizer = hf_tokenizer
         self.model = hf_model
