@@ -5,7 +5,7 @@
 RadPrompter is a Python package for simplified and reproducible LLM prompting, particularly tailored for biomedical applications, including Radiology.
 
 ## Installation
-
+Upgrade your pyhton to >=3.11
 You can install RadPrompter using pip:
 
 ```bash
