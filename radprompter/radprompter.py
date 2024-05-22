@@ -49,7 +49,9 @@ class RadPrompter():
         for schema in prompt.schemas.schemas:
             schema_response = []
             prompt_with_schema = deepcopy(prompt)
-            prompt_with_schema.replace_placeholders(schema | item)
+            merged_dict = deepcopy(schema)
+            merged_dict.update(item)
+            prompt_with_schema.replace_placeholders(merged_dict)
         
             for i in range(prompt.num_turns):
                 messages.append({"role": "user", "content": prompt_with_schema.user_prompts[i]})
