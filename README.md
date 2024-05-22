@@ -12,6 +12,8 @@ You can install RadPrompter using pip:
 pip install radprompter
 ```
 
+*Note*: RadPrompter works with Python 3.7+. However, for maximum compatilibity we recommend using Python 3.11+.
+
 ## Getting Started
 
 The core of RadPrompter is the `.toml` configuration file which defines your prompts. Here's a minimal example:
