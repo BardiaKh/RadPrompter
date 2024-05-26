@@ -33,6 +33,10 @@ class RadPrompter():
         self.log = {
             "RadPrompter Version": __version__,
             "Model": self.client.model,
+            "Seed": self.client.seed,
+            "Temperature": self.client.temperature,
+            "Frequency Penalty": self.client.frequency_penalty,
+            "Top-P": self.client.top_p,
             "Prompt TOML": self.prompt.prompt_file,
             "Prompt Version": self.prompt.version,
             "Prompt Hash": self.prompt.md5_hash,
