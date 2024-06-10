@@ -22,7 +22,7 @@ class RadPrompter():
         if file_exists:
             print(f"WARNING: Output file {self.output_file} already exists. Appending to it. If you want to create a new file, please delete the existing file first or pass a new file name.")
         
-        if isinstance(self.client, OpenAIClient) and self.prompt.response_templates.count("") != prompt.num_turns:
+        if type(self.client) == OpenAIClient and self.prompt.response_templates.count("") != prompt.num_turns:
             print("WARNING: OpenAI client does not accept response templates and will be ignored.")
             self.prompt.response_templates = [""]*prompt.num_turns
             
