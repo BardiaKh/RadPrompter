@@ -20,7 +20,7 @@ class RadPrompter():
         file_exists = os.path.isfile(self.output_file)
         
         if file_exists:
-            print(f"WARNING: Output file {self.output_file} already exists. Appending to it. If you want to create a new file, please delete the existing file first or pass a new file name.")
+            print(f"WARNING: Output file {self.output_file} already exists. The file will be **replaced** if you proceed with running the engine.")
         
         if type(self.client) == OpenAIClient and self.prompt.response_templates.count("") != prompt.num_turns:
             print("WARNING: OpenAI client does not accept response templates and will be ignored.")
@@ -90,7 +90,7 @@ class RadPrompter():
                 futures.append(future)
 
             if self.output_file is not None:
-                with open(self.output_file, "a", newline="") as f:
+                with open(self.output_file, "w", newline="") as f:
                     writer = csv.writer(f, quoting=csv.QUOTE_ALL)
                     header_written = False
 
