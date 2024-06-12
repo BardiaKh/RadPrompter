@@ -51,30 +51,33 @@ class RadPrompter():
         ]
         item_response = []
         for schema in prompt.schemas.schemas:
-            schema_response = []
-            prompt_with_schema = deepcopy(prompt)
-            merged_dict = deepcopy(schema)
-            merged_dict.update(item)
-            prompt_with_schema.replace_placeholders(merged_dict)
-        
-            for i in range(prompt.num_turns):
-                messages.append({"role": "user", "content": prompt_with_schema.user_prompts[i]})
-                if prompt.response_templates[i] != "":
-                    messages.append({"role": "assistant", "content": prompt_with_schema.response_templates[i]})
-                
-                response, messages = self.client.ask_model(messages, prompt_with_schema.stop_tags[i])
-                schema_response.append(response)
+            try:
+                schema_response = []
+                prompt_with_schema = deepcopy(prompt)
+                merged_dict = deepcopy(schema)
+                merged_dict.update(item)
+                prompt_with_schema.replace_placeholders(merged_dict)
             
-            if len(schema_response) == 1:
-                item_response.append({f"{schema['variable_name']}_response":schema_response[0]})
-            else:
-                for r, schema_response_ in enumerate(schema_response):    
-                    item_response.append({f"{schema['variable_name']}_response_{r}":schema_response_})
-                        
-            if self.hide_blocks:
-                messages = [
-                    {"role": "system", "content": prompt.system_prompt},
-                ]
+                for i in range(prompt.num_turns):
+                    messages.append({"role": "user", "content": prompt_with_schema.user_prompts[i]})
+                    if prompt.response_templates[i] != "":
+                        messages.append({"role": "assistant", "content": prompt_with_schema.response_templates[i]})
+                    
+                    response, messages = self.client.ask_model(messages, prompt_with_schema.stop_tags[i])
+                    schema_response.append(response)
+                
+                if len(schema_response) == 1:
+                    item_response.append({f"{schema['variable_name']}_response":schema_response[0]})
+                else:
+                    for r, schema_response_ in enumerate(schema_response):    
+                        item_response.append({f"{schema['variable_name']}_response_{r}":schema_response_})
+                            
+                if self.hide_blocks:
+                    messages = [
+                        {"role": "system", "content": prompt.system_prompt},
+                    ]
+            except Exception as e:
+                print(f"Error processing schema {schema['variable_name']} for item {index}: {e}")
         
         return index, item_response
 
