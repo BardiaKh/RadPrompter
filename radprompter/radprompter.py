@@ -66,7 +66,7 @@ class RadPrompter():
                     
                     response, messages = self.client.ask_model(messages, prompt_with_schema.stop_tags[i], max_tokens=self.max_generation_tokens)
                     schema_response.append(response)
-                
+                                                    
                 if len(schema_response) == 1:
                     item_response.append({f"{schema['variable_name']}_response":schema_response[0]})
                 else:
