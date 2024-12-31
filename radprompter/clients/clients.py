@@ -6,10 +6,14 @@ class Client():
         raise NotImplementedError()
     
     def ask_model(self, messages, stop, max_tokens=200):
+        if messages[-1]['role'] == "assistant":
+            prefix = messages[-1]['content']
+        else:
+            prefix = ""
         response = self.chat_complete(messages, stop, max_tokens)
-        messages = self.update_last_message(messages, response, suffix=stop)
+        messages = self.update_last_message(messages, response, prefix=prefix, suffix=stop)
         return response, messages
         
-    def update_last_message(self, messages, response, suffix=None):
-        messages[-1]['content'] += response + (suffix if suffix else "")
+    def update_last_message(self, messages, response, prefix=None, suffix=None):
+        messages[-1]['content'] += (prefix if prefix else "") + response + (suffix if suffix else "")
         return messages

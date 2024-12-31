@@ -3,7 +3,7 @@ from .. import Client
 
 class OpenAIClient(Client):
     def __init__(self, model, **kwargs):
-        self.seed = kwargs.pop("seed", 42)
+        self.seed = kwargs.pop("seed", None)
         self.temperature = kwargs.pop("temperature", 0.0)
         self.frequency_penalty = kwargs.pop("frequency_penalty", 1)
         self.top_p = kwargs.pop("top_p", 1)
