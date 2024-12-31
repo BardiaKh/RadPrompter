@@ -10,7 +10,7 @@ from .clients import OpenAIClient, HuggingFaceClient
 from .__version__ import __version__
 
 class RadPrompter():
-    def __init__(self, client, prompt, output_file, hide_blocks=False, concurrency=1, max_generation_tokens=4096):
+    def __init__(self, client, prompt, output_file, hide_blocks=False, concurrency=1, max_generation_tokens=4096, max_generation_tokens=4096):
         self.client = client
         self.prompt = prompt
         self.hide_blocks = hide_blocks
@@ -64,9 +64,9 @@ class RadPrompter():
                     if prompt.response_templates[i] != "":
                         messages.append({"role": "assistant", "content": prompt_with_schema.response_templates[i]})
                     
-                    response, messages = self.client.ask_model(messages, prompt_with_schema.stop_tags[i], max_tokens=self.max_generation_tokens)
+                    response, messages = self.client.ask_model(messages, prompt_with_schema.stop_tags[i], max_tokens=self.max_generation_tokens, max_tokens=self.max_generation_tokens)
                     schema_response.append(response)
-                                                    
+                                                                                        
                 if len(schema_response) == 1:
                     item_response.append({f"{schema['variable_name']}_response":schema_response[0]})
                 else:
@@ -78,7 +78,7 @@ class RadPrompter():
                         {"role": "system", "content": prompt.system_prompt},
                     ]
             except Exception as e:
-                print(f"Error processing schema {schema['variable_name']} for item {index}: {e}.")
+                print(f"Error processing schema {schema['variable_name']} for item {index}: {e}.. You might need to increase engine's `max_generation_tokens` parameters.")
         
         return index, item_response
 
