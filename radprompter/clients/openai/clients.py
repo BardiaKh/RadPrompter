@@ -10,7 +10,7 @@ class OpenAIClient(Client):
         self.client = OpenAI(**kwargs)
         super().__init__(model)
 
-    def chat_complete(self, messages, stop, max_tokens):
+    def chat_complete(self, messages, stop=None, max_tokens=None):
         completion = self.client.chat.completions.create(
             model=self.model,
             messages=messages,
