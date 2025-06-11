@@ -1,8 +1,8 @@
-from ..clients import Client
+from ..client import Client
 import os
 try:
-    from transformers import AutoModelForCausalLM, AutoTokenizer, StoppingCriteria, StoppingCriteriaList
-    import torch
+    from transformers import StoppingCriteria, StoppingCriteriaList, set_seed # type: ignore
+    import torch # type: ignore
     os.environ['HAS_TRANSFORMERS'] = str(True)
 except ImportError:
     from abc import ABC
@@ -32,34 +32,39 @@ class HuggingFaceClient(Client):
             raise ImportError("HuggingFaceClient requires the `transformers` package to be installed.")
 
         model_name = hf_model.__class__.__name__
-        super().__init__(model_name)
         self.hf_tokenizer = hf_tokenizer
         self.hf_model = hf_model
         self.temperature = kwargs.pop("temperature", 0.7)
         self.top_p = kwargs.pop("top_p", 0.9)
+        self.seed = kwargs.pop("seed", None)
         self.frequency_penalty = kwargs.pop("frequency_penalty", 0.0)
-        self.max_tokens = kwargs.pop("max_tokens", 200)
 
+        self.provider = "huggingface"
+        
+        super().__init__(model_name)
+        
     def chat_complete(self, messages, stop=None, max_tokens=None):
+        if self.seed:
+            set_seed(self.seed)
+            
         if max_tokens is None:
             max_tokens = self.max_tokens
 
         if messages[-1]['role'] == "assistant":
-            last_message = messages[-1]['content']
-            messages = messages[:-1]
+            # Use continue_final_message=True to properly handle turn tokens
+            tokenized_chat = self.hf_tokenizer.apply_chat_template(
+                messages, 
+                tokenize=True, 
+                continue_final_message=True, 
+                return_tensors="pt"
+            )
         else:
-            last_message = None
-            
-        tokenized_chat = self.hf_tokenizer.apply_chat_template(
-            messages, 
-            tokenize=True, 
-            add_generation_prompt=True, 
-            return_tensors="pt"
-        )
-        
-        if last_message:
-            tokenized_last_message = self.hf_tokenizer.encode(last_message, return_tensors="pt", add_special_tokens=False)
-            tokenized_chat = torch.cat([tokenized_chat, tokenized_last_message], dim=-1)
+            tokenized_chat = self.hf_tokenizer.apply_chat_template(
+                messages, 
+                tokenize=True, 
+                add_generation_prompt=True, 
+                return_tensors="pt"
+            )
 
         stopping_criteria_list = StoppingCriteriaList()
         if stop:

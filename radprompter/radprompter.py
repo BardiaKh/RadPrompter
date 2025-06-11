@@ -6,11 +6,11 @@ from tqdm import tqdm
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import csv
-from .clients import OpenAIClient, HuggingFaceClient
+from .clients import UniversalClient, HuggingFaceClient, OpenAIClient, AnthropicClient, vLLMClient, OllamaClient, GeminiClient
 from .__version__ import __version__
 
 class RadPrompter():
-    def __init__(self, client, prompt, output_file, hide_blocks=False, concurrency=1, max_generation_tokens=4096, max_generation_tokens=4096):
+    def __init__(self, client, prompt, output_file, hide_blocks=False, concurrency=1, max_generation_tokens=4096):
         self.client = client
         self.prompt = prompt
         self.hide_blocks = hide_blocks
@@ -23,8 +23,8 @@ class RadPrompter():
         if file_exists:
             print(f"WARNING: Output file {self.output_file} already exists. The file will be **replaced** if you proceed with running the engine.")
         
-        if type(self.client) == OpenAIClient and self.prompt.response_templates.count("") != prompt.num_turns:
-            print("WARNING: OpenAI client does not accept response templates and will be ignored.")
+        if isinstance(self.client, UniversalClient) and self.prompt.response_templates.count("") != prompt.num_turns:
+            print("WARNING: Universal-based clients do not accept response templates and will be ignored.")
             self.prompt.response_templates = [""]*prompt.num_turns
             
         if isinstance(self.client, HuggingFaceClient) and self.concurrency > 1:
