@@ -99,7 +99,7 @@ class UniversalClient(Client):
 
         super().__init__(model)
 
-    def chat_complete(self, messages, stop=None, max_tokens=None):
+    def chat_complete(self, messages, stop=None, max_tokens=None, response_format=None):
         """
         Complete a chat conversation using LiteLLM.
         
@@ -107,6 +107,7 @@ class UniversalClient(Client):
             messages (list): List of message dictionaries with 'role' and 'content'
             stop (str or list): Stop sequence(s) to end generation
             max_tokens (int): Maximum tokens to generate (overrides instance default)
+            response_format (dict): Response format specification (e.g., JSON schema)
             
         Returns:
             str: The generated response text
@@ -141,6 +142,10 @@ class UniversalClient(Client):
                 completion_args["stop"] = [stop]
             else:
                 completion_args["stop"] = stop
+        
+        # Handle response format (for structured output)
+        if response_format:
+            completion_args["response_format"] = response_format
         
         # Add any extra kwargs that might be needed for specific providers
         completion_args.update(self.extra_kwargs)

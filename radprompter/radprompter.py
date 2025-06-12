@@ -10,13 +10,14 @@ from .clients import UniversalClient, HuggingFaceClient, OpenAIClient, Anthropic
 from .__version__ import __version__
 
 class RadPrompter():
-    def __init__(self, client, prompt, output_file, hide_blocks=False, concurrency=1, max_generation_tokens=4096):
+    def __init__(self, client, prompt, output_file, hide_blocks=False, concurrency=1, max_generation_tokens=4096, use_pydantic=False):
         self.client = client
         self.prompt = prompt
         self.hide_blocks = hide_blocks
         self.concurrency = concurrency
         self.output_file = output_file
         self.max_generation_tokens = max_generation_tokens
+        self.use_pydantic = use_pydantic
         assert self.output_file.endswith(".csv"), "Output file must be a .csv file"
         file_exists = os.path.isfile(self.output_file)
         
@@ -31,6 +32,10 @@ class RadPrompter():
             print("WARNING: HuggingFace client does not support concurrency > 1 and will be set to 1.")
             self.concurrency = 1
         
+        # Populate Pydantic models if use_pydantic is True
+        if self.use_pydantic:
+            self.prompt.schemas.populate_pydantic_models()
+        
         self.log = {
             "RadPrompter Version": __version__,
             "Model": self.client.model,
@@ -42,6 +47,7 @@ class RadPrompter():
             "Prompt Version": self.prompt.version,
             "Prompt Hash": self.prompt.md5_hash,
             "Concurrency Factor": self.concurrency,
+            "Use Pydantic": self.use_pydantic,
         }
         
     def process_single_item(self, item, index):
@@ -51,20 +57,30 @@ class RadPrompter():
             {"role": "system", "content": prompt.system_prompt},
         ]
         item_response = []
-        for schema in prompt.schemas.schemas:
+        for schema_idx, schema in enumerate(prompt.schemas.schemas):
             try:
                 schema_response = []
                 prompt_with_schema = deepcopy(prompt)
                 merged_dict = deepcopy(schema)
                 merged_dict.update(item)
                 prompt_with_schema.replace_placeholders(merged_dict)
-            
+                
+                # Get response format if using Pydantic
+                response_format = None
+                if self.use_pydantic and schema.get('pydantic_model'):
+                    response_format = prompt.schemas.get_schema_json_schema(schema_idx)
+                                
                 for i in range(prompt.num_turns):
                     messages.append({"role": "user", "content": prompt_with_schema.user_prompts[i]})
                     if prompt.response_templates[i] != "":
                         messages.append({"role": "assistant", "content": prompt_with_schema.response_templates[i]})
                     
-                    response, messages = self.client.ask_model(messages, prompt_with_schema.stop_tags[i], max_tokens=self.max_generation_tokens, max_tokens=self.max_generation_tokens)
+                    response, messages = self.client.ask_model(
+                        messages, 
+                        prompt_with_schema.stop_tags[i], 
+                        max_tokens=self.max_generation_tokens, 
+                        response_format=response_format
+                    )
                     schema_response.append(response)
                                                                                         
                 if len(schema_response) == 1:

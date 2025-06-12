@@ -5,6 +5,9 @@ try: import tomllib
 except ModuleNotFoundError: import pip._vendor.tomli as tomllib
 import hashlib
 from copy import deepcopy
+from pydantic import BaseModel, Field, create_model
+from typing import Literal, Union, Optional
+from enum import Enum
 
 try: 
     from IPython.display import HTML, display
@@ -41,31 +44,28 @@ class Prompt:
         
         assert len(self.user_prompts) == len(self.response_templates) == len(self.stop_tags), "Number of user prompts, response templates, and stop tags should be the same."
     
-    def process_schema(self, schema):
+    def process_single_schema(self, schema):
         processed_schema = []
         for item in schema:
             assert "variable_name" in item, "Schema item should have a 'variable_name' key."
-            hint = f"'{item['variable_name']}'\n"
-            if item['type'] == "select":
-                if item['show_options_in_hint']:
-                    hint += "Here are your options and you can explicitly use one of these:\n  - " + "\n  - ".join(f"`{i}`" for i in item['options']) + "\n\n"
 
-            hint += "Hint: " + item['hint']
+            hint = "Hint: " + item['hint']
 
             other_values = {k:v for k,v in item.items() if k not in ["variable_name", "type", "options", "hint", "show_options_in_hint"]}
             processed_schema.append({
                 "variable_name": item['variable_name'],
                 "type": item['type'],
-                "options": item['options'] if item['type'] == "select" else "",
                 "hint": hint,
+                "pydantic_model": None,  # Will be populated when use_pydantic is True
                 **other_values
             })
+            
 
         return processed_schema
     
     def get_schemas(self):
         if "SCHEMAS" in self.data:
-            schemas = self.process_schema(self.data["SCHEMAS"].values())
+            schemas = self.process_single_schema(self.data["SCHEMAS"].values())
         else:
             schemas = []
         if len(schemas) == 0:
@@ -229,6 +229,57 @@ class Schemas:
     def __init__(self, prompt, schemas):
         self.prompt = prompt
         self.schemas = schemas
+
+    def create_pydantic_model_for_schema(self, schema):
+        """Create a Pydantic model for a single schema"""
+        variable_name = schema['variable_name']
+        schema_type = schema['type']
+        
+        # Determine field type and constraints
+        if schema_type == "select":
+            # Create enum for select type with choices
+            options = schema['options']
+            enum_class = Enum(f"{variable_name.title()}Enum", {opt: opt for opt in options})
+            field_type = enum_class
+            field_info = Field(description=schema.get('hint', ""))
+        elif schema_type == "int":
+            field_type = int
+            field_info = Field(description=schema.get('hint', ""))
+        elif schema_type == "float":
+            field_type = float
+            field_info = Field(description=schema.get('hint', ""))
+        elif schema_type == "string" or schema_type == "str":
+            field_type = str
+            field_info = Field(description=schema.get('hint', ""))
+        else:
+            raise ValueError(f"Unknown schema type: {schema_type}")
+        
+        # Create the dynamic model
+        model_name = f"{variable_name.title()}Model"
+        model_fields = {variable_name: (field_type, field_info)}
+        
+        pydantic_model = create_model(model_name, **model_fields)
+        return pydantic_model
+
+    def populate_pydantic_models(self):
+        """Populate Pydantic models for all schemas"""
+        for schema in self.schemas:
+            if schema['type'] != "default":
+                schema['pydantic_model'] = self.create_pydantic_model_for_schema(schema)
+                if schema.get('show_options_in_hint', False):
+                    schema_text = f"\n\nRespond with a JSON object following this schema: {schema['pydantic_model'].model_json_schema()}"
+                    schema['hint'] += schema_text
+    
+    def get_pydantic_model(self, index):
+        """Get the Pydantic model for a specific schema"""
+        return self.schemas[index].get('pydantic_model')
+    
+    def get_schema_json_schema(self, index):
+        """Get the JSON schema for a specific schema's Pydantic model"""
+        pydantic_model = self.get_pydantic_model(index)
+        if pydantic_model:
+            return pydantic_model.model_json_schema()
+        return None
 
     def __getitem__(self, index):
         schema = self.schemas[index]
