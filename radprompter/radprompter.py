@@ -6,11 +6,11 @@ from tqdm import tqdm
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import csv
-from .clients import UniversalClient, HuggingFaceClient, OpenAIClient, AnthropicClient, vLLMClient, OllamaClient, GeminiClient
+from .clients import UniversalClient, HuggingFaceClient
 from .__version__ import __version__
 
 class RadPrompter():
-    def __init__(self, client, prompt, output_file, hide_blocks=False, concurrency=1, max_generation_tokens=4096, use_pydantic=False):
+    def __init__(self, client, prompt, output_file, hide_blocks=False, concurrency=1, max_generation_tokens=4096, use_pydantic=True):
         self.client = client
         self.prompt = prompt
         self.hide_blocks = hide_blocks
