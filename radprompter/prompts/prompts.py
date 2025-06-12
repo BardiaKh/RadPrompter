@@ -48,14 +48,14 @@ class Prompt:
         processed_schema = []
         for item in schema:
             assert "variable_name" in item, "Schema item should have a 'variable_name' key."
-
-            hint = "Hint: " + item['hint']
-
+            assert "type" in item, "Schema item should have a 'type' key."
+            assert item['type'] in ["int", "float", "string", "select"], "Schema item should have a 'type' key with one of the following values: int, float, string, select."
+            
             other_values = {k:v for k,v in item.items() if k not in ["variable_name", "type", "options", "hint", "show_options_in_hint"]}
             processed_schema.append({
                 "variable_name": item['variable_name'],
                 "type": item['type'],
-                "hint": hint,
+                "hint": item['hint'],
                 "pydantic_model": None,  # Will be populated when use_pydantic is True
                 **other_values
             })
@@ -248,7 +248,7 @@ class Schemas:
         elif schema_type == "float":
             field_type = float
             field_info = Field(description=schema.get('hint', ""))
-        elif schema_type == "string" or schema_type == "str":
+        elif schema_type == "string":
             field_type = str
             field_info = Field(description=schema.get('hint', ""))
         else:
