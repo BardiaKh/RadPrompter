@@ -51,7 +51,7 @@ class Prompt:
             assert "type" in item, "Schema item should have a 'type' key."
             assert item['type'] in ["int", "float", "string", "select"], "Schema item should have a 'type' key with one of the following values: int, float, string, select."
             
-            other_values = {k:v for k,v in item.items() if k not in ["variable_name", "type", "options", "hint", "show_options_in_hint"]}
+            other_values = {k:v for k,v in item.items() if k not in ["variable_name", "type", "hint", "show_options_in_hint"]}
             processed_schema.append({
                 "variable_name": item['variable_name'],
                 "type": item['type'],
@@ -238,6 +238,7 @@ class Schemas:
         # Determine field type and constraints
         if schema_type == "select":
             # Create enum for select type with choices
+            assert "options" in schema, "Schema of type 'select' should have an 'options' key."
             options = schema['options']
             enum_class = Enum(f"{variable_name.title()}Enum", {opt: opt for opt in options})
             field_type = enum_class
