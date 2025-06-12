@@ -94,7 +94,7 @@ class RadPrompter():
                         {"role": "system", "content": prompt.system_prompt},
                     ]
             except Exception as e:
-                print(f"Error processing schema {schema['variable_name']} for item {index}: {e}.. You might need to increase engine's `max_generation_tokens` parameters.")
+                print(f"Error processing schema {schema['variable_name']} for item {index}: {e}")
         
         return index, item_response
 

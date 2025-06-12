@@ -15,5 +15,9 @@ class Client():
         return response, messages
         
     def update_last_message(self, messages, response, prefix=None, suffix=None):
-        messages[-1]['content'] += (prefix if prefix else "") + response + (suffix if suffix else "")
+        if messages[-1]['role'] == "assistant":
+            messages[-1]['content'] += (prefix if prefix else "") + response + (suffix if suffix else "")
+        else:
+            # If the last message is not an assistant message, add a new assistant message (there is no prefix)
+            messages.append({"role": "assistant", "content": response + (suffix if suffix else "")})
         return messages
