@@ -1,4 +1,5 @@
 from ..client import Client
+import warnings
 import litellm # type: ignore
 litellm.set_verbose = False
 
@@ -64,6 +65,12 @@ class UniversalClient(Client):
         self.api_base = kwargs.pop("api_base", None)
         base_url = kwargs.pop("base_url", None)
         if base_url:
+            warnings.warn(
+                "The 'base_url' parameter is deprecated and will be removed in version 3.0. "
+                "Please use 'api_base' instead.",
+                DeprecationWarning,
+                stacklevel=2
+            )
             self.api_base = base_url
         
         self.temperature = kwargs.pop("temperature", 0.0)
