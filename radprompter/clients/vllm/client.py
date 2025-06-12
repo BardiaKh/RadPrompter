@@ -34,7 +34,7 @@ class vLLMClient(UniversalClient):
         Initialize the vLLM client.
         
         Args:
-            model (str): Model name (will be prefixed with 'vllm/')
+            model (str): Model name (will be prefixed with 'hosted_vllm/')
             api_base (str): Base URL of the vLLM server (required)
             **kwargs: Additional parameters passed to UniversalClient
         """
@@ -46,8 +46,8 @@ class vLLMClient(UniversalClient):
         if not kwargs.get("api_key"):
             kwargs["api_key"] = "EMPTY"
         
-        # Prefix model name with 'vllm/' if not already present
-        if not model.startswith("vllm/"):
-            model = f"vllm/{model}"
+        # Prefix model name with 'hosted_vllm/' if not already present
+        if not model.startswith("hosted_vllm/"):
+            model = f"hosted_vllm/{model}"
         
         super().__init__(model, **kwargs) 
