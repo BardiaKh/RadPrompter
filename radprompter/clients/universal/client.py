@@ -69,7 +69,7 @@ class UniversalClient(Client):
                 "The 'base_url' parameter is deprecated and will be removed in version 3.0. "
                 "Please use 'api_base' instead.",
                 DeprecationWarning,
-                stacklevel=2
+                stacklevel=1
             )
             self.api_base = base_url
         
