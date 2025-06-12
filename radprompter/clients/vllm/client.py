@@ -39,7 +39,7 @@ class vLLMClient(UniversalClient):
             **kwargs: Additional parameters passed to UniversalClient
         """
         # Ensure api_base is provided for vLLM
-        if not kwargs.get("api_base"):
+        if not kwargs.get("api_base") and not kwargs.get("base_url"):
             raise ValueError("api_base is required for vLLM client. Please provide the vLLM server URL.")
         
         # Set defalt api_key to EMPTY if not provided
