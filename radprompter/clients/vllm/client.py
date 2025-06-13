@@ -5,7 +5,7 @@ class vLLMClient(UniversalClient):
     vLLM client using LiteLLM.
     
     Connects to vLLM inference servers for high-performance model serving.
-    The model name will be automatically prefixed with 'vllm/'.
+    The model name will be automatically prefixed with 'hosted_vllm/'.
     
     Examples:
         # Local vLLM server
@@ -50,4 +50,36 @@ class vLLMClient(UniversalClient):
         if not model.startswith("hosted_vllm/"):
             model = f"hosted_vllm/{model}"
         
-        super().__init__(model, **kwargs) 
+        super().__init__(model, **kwargs)
+    
+    def chat_complete(self, messages, stop=None, max_tokens=None, response_format=None):
+        """
+        Complete a chat conversation using vLLM with automatic handling of vLLM-specific parameters.
+        
+        Args:
+            messages (list): List of message dictionaries with 'role' and 'content'
+            stop (str or list): Stop sequence(s) to end generation
+            max_tokens (int): Maximum tokens to generate (overrides instance default)
+            response_format (dict): Response format specification (e.g., JSON schema)
+            **kwargs: Additional parameters
+            
+        Returns:
+            str: The generated response text
+        """
+        # Automatically determine vLLM-specific parameters based on message structure
+        vllm_params = {}
+        
+        # If the last message is an assistant message, we need to continue it
+        # This happens when there's a response template/prefix
+        if messages and messages[-1]['role'] == "assistant":
+            vllm_params['continue_final_message'] = True
+            vllm_params['add_generation_prompt'] = False
+        
+        # Pass all parameters to the parent method
+        return super().chat_complete(
+            messages=messages, 
+            stop=stop, 
+            max_tokens=max_tokens, 
+            response_format=response_format, 
+            **vllm_params,
+        )
