@@ -1,6 +1,7 @@
 import os
 import pandas as pd
 import re
+import warnings
 from copy import deepcopy
 from tqdm import tqdm
 from datetime import datetime
@@ -22,19 +23,28 @@ class RadPrompter():
         file_exists = os.path.isfile(self.output_file)
         
         if file_exists:
-            print(f"WARNING: Output file {self.output_file} already exists. The file will be **replaced** if you proceed with running the engine.")
+            warnings.warn(f"Output file {self.output_file} already exists. The file will be **replaced** if you proceed with running the engine.")
         
         if isinstance(self.client, OpenAIClient) and self.prompt.response_templates.count("") != prompt.num_turns:
-            print("WARNING: OpenAI models do not accept response templates and will be ignored.")
+            warnings.warn("OpenAI models do not accept response templates and will be ignored.")
             self.prompt.response_templates = [""]*prompt.num_turns
             
         if isinstance(self.client, HuggingFaceClient) and self.concurrency > 1:
-            print("WARNING: HuggingFace client does not support concurrency > 1 and will be set to 1.")
+            warnings.warn("HuggingFace client does not support concurrency > 1 and will be set to 1.")
             self.concurrency = 1
+        
+        if isinstance(self.client, HuggingFaceClient) and self.use_pydantic:
+            warnings.warn("HuggingFace client does not support Pydantic models and will be set to False.")
+            self.use_pydantic = False
         
         # Populate Pydantic models if use_pydantic is True
         if self.use_pydantic:
             self.prompt.schemas.populate_pydantic_models()
+            
+            if self.prompt.stop_tags.count("") != self.prompt.num_turns or self.prompt.response_templates.count("") != self.prompt.num_turns:
+                warnings.warn("Pydantic models do not support stop tags and response templates and will be ignored.")
+                self.prompt.reset_stop_tags()
+                self.prompt.reset_response_templates()
         
         self.log = {
             "RadPrompter Version": __version__,

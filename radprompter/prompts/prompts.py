@@ -158,6 +158,14 @@ class Prompt:
 
         return True
         
+    def reset_stop_tags(self):
+        """Reset stop_tags to empty strings for each turn."""
+        self.stop_tags = [""]*self.num_turns
+    
+    def reset_response_templates(self):
+        """Reset response_templates to empty strings for each turn."""
+        self.response_templates = [""]*self.num_turns
+        
     def __getitem__(self, index):
         schema = self.schemas[index]
         prompt_copy = deepcopy(self)
