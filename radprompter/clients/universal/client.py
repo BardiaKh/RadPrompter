@@ -65,11 +65,12 @@ class UniversalClient(Client):
         self.api_base = kwargs.pop("api_base", None)
         base_url = kwargs.pop("base_url", None)
         if base_url:
+            # Show deprecation warning with higher stacklevel to point to user code
             warnings.warn(
                 "The 'base_url' parameter is deprecated and will be removed in version 3.0. "
                 "Please use 'api_base' instead.",
                 DeprecationWarning,
-                stacklevel=1
+                stacklevel=3
             )
             self.api_base = base_url
         
