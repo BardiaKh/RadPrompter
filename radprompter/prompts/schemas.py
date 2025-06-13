@@ -55,6 +55,85 @@ class Schemas:
         """Get the Pydantic model for a specific schema"""
         return self.schemas[index].get('pydantic_model')
     
+    def should_process_schema(self, schema_index, previous_responses):
+        """
+        Determine if a schema should be processed based on its dependencies.
+        
+        Args:
+            schema_index (int): Index of the schema to check
+            previous_responses (dict): Dictionary of previous schema responses
+            
+        Returns:
+            tuple: (should_process: bool, default_value: any)
+        """
+        if schema_index >= len(self.schemas):
+            return False, None
+            
+        schema = self.schemas[schema_index]
+        
+        # If no depends_on field, always process
+        if 'depends_on' not in schema:
+            return True, None
+            
+        depends_on = schema['depends_on']
+        dependency_schema = depends_on['schema']
+        condition_value = depends_on['condition']
+        default_value = depends_on.get('default_value', '')
+        
+        # Find all response keys that match the dependency schema
+        # This handles both single-turn ({schema}_response) and multi-turn ({schema}_response_0, etc.)
+        matching_responses = []
+        dependency_key_prefix = f"{dependency_schema}_response"
+        
+        for key, value in previous_responses.items():
+            if key.startswith(dependency_key_prefix):
+                # Check if it's exactly the base key or has a valid suffix
+                if key == dependency_key_prefix or (key.startswith(dependency_key_prefix + "_") and 
+                                                    key[len(dependency_key_prefix + "_"):].isdigit()):
+                    matching_responses.append(value)
+        
+        # If no matching responses found, dependency not yet processed
+        if not matching_responses:
+            return False, default_value
+        
+        # Check if any of the matching responses meet the condition
+        for actual_value in matching_responses:
+            # Handle different condition types
+            if isinstance(condition_value, str):
+                condition_met = actual_value == condition_value
+            elif isinstance(condition_value, list):
+                condition_met = actual_value in condition_value
+            else:
+                # Try direct comparison
+                condition_met = actual_value == condition_value
+                
+            if condition_met:
+                return True, None
+        
+        # No matching responses met the condition
+        return False, default_value
+    
+    def get_dependency_order(self):
+        """
+        Get the order in which schemas should be processed based on dependencies.
+        
+        Returns:
+            list: List of schema indices in dependency order
+        """
+        # Simple topological sort for dependencies
+        independent_schemas = []
+        dependent_schemas = []
+        
+        for i, schema in enumerate(self.schemas):
+            if 'depends_on' not in schema:
+                independent_schemas.append(i)
+            else:
+                dependent_schemas.append(i)
+        
+        # For now, process independent schemas first, then dependent ones
+        # In a more complex implementation, we'd do proper topological sorting
+        return independent_schemas + dependent_schemas
+    
     def parse_response(self, response_json, schema_index):
         """
         Extract just the response value from a Pydantic JSON response.

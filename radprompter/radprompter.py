@@ -71,8 +71,24 @@ class RadPrompter():
             {"role": "system", "content": prompt.system_prompt},
         ]
         item_response = []
-        for schema_idx, schema in enumerate(prompt.schemas.schemas):
+        previous_responses = {}  # Store responses for dependency checking
+        
+        # Get schemas in dependency order
+        schema_order = prompt.schemas.get_dependency_order()
+        
+        for schema_idx in schema_order:
+            schema = prompt.schemas.schemas[schema_idx]
             try:
+                # Check if this schema should be processed based on dependencies
+                should_process, default_value = prompt.schemas.should_process_schema(schema_idx, previous_responses)
+                
+                if not should_process:
+                    # Use default value for skipped schema
+                    response_key = f"{schema['variable_name']}_response"
+                    previous_responses[response_key] = default_value
+                    item_response.append({response_key: default_value})
+                    continue
+                
                 schema_response = []
                 prompt_with_schema = deepcopy(prompt)
                 merged_dict = deepcopy(schema)
@@ -104,10 +120,15 @@ class RadPrompter():
                     schema_response.append(parsed_response)
                                                                                         
                 if len(schema_response) == 1:
-                    item_response.append({f"{schema['variable_name']}_response":schema_response[0]})
+                    response_key = f"{schema['variable_name']}_response"
+                    response_value = schema_response[0]
+                    previous_responses[response_key] = response_value
+                    item_response.append({response_key: response_value})
                 else:
                     for r, schema_response_ in enumerate(schema_response):    
-                        item_response.append({f"{schema['variable_name']}_response_{r}":schema_response_})
+                        response_key = f"{schema['variable_name']}_response_{r}"
+                        previous_responses[response_key] = schema_response_
+                        item_response.append({response_key: schema_response_})
                             
                 if self.hide_blocks:
                     messages = [
@@ -115,6 +136,10 @@ class RadPrompter():
                     ]
             except Exception as e:
                 print(f"Error processing schema {schema['variable_name']} for item {index}: {e}")
+                # Add empty response for failed schema to maintain consistency
+                response_key = f"{schema['variable_name']}_response"
+                previous_responses[response_key] = ""
+                item_response.append({response_key: "ERROR"})
         
         return index, item_response
 

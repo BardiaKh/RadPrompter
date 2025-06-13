@@ -49,6 +49,16 @@ class Prompt:
             assert "type" in item, "Schema item should have a 'type' key."
             assert item['type'] in ["int", "float", "string", "select"], "Schema item should have a 'type' key with one of the following values: int, float, string, select."
             
+            # Validate depends_on field if present
+            if "depends_on" in item:
+                depends_on = item["depends_on"]
+                if not isinstance(depends_on, dict):
+                    raise ValueError(f"depends_on for schema '{item['variable_name']}' must be a dictionary")
+                
+                required_keys = ['schema', 'condition']
+                if not all(key in depends_on for key in required_keys):
+                    raise ValueError(f"depends_on for schema '{item['variable_name']}' must contain 'schema' and 'condition' keys")
+            
             other_values = {k:v for k,v in item.items() if k not in ["variable_name", "type", "hint", "show_options_in_hint"]}
             processed_schema.append({
                 "variable_name": item['variable_name'],
