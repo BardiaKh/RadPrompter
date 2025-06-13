@@ -79,6 +79,8 @@ class RadPrompter():
                 merged_dict.update(item)
                 prompt_with_schema.replace_placeholders(merged_dict)
                 
+                additional_generation_params = {}
+                
                 # Get response format if using Pydantic
                 response_format = None
                 if self.use_pydantic and schema.get('pydantic_model'):
@@ -88,12 +90,15 @@ class RadPrompter():
                     messages.append({"role": "user", "content": prompt_with_schema.user_prompts[i]})
                     if prompt.response_templates[i] != "":
                         messages.append({"role": "assistant", "content": prompt_with_schema.response_templates[i]})
+                        if self.client.provider == "hosted_vllm":
+                            additional_generation_params['continue_final_message'] = True
                     
                     response, messages = self.client.ask_model(
                         messages, 
                         prompt_with_schema.stop_tags[i], 
                         max_tokens=self.max_generation_tokens, 
-                        response_format=response_format
+                        response_format=response_format,
+                        **additional_generation_params
                     )
                     schema_response.append(response)
                                                                                         

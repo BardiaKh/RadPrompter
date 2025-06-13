@@ -43,7 +43,7 @@ class HuggingFaceClient(Client):
         
         super().__init__(model_name)
         
-    def chat_complete(self, messages, stop=None, max_tokens=None, response_format=None):
+    def chat_complete(self, messages, stop=None, max_tokens=None, response_format=None, **kwargs):
         if self.seed:
             set_seed(self.seed)
             

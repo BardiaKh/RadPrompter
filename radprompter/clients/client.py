@@ -5,12 +5,12 @@ class Client():
     def chat_complete(self, messages, stop, max_tokens=None, response_format=None, **kwargs):
         raise NotImplementedError()
     
-    def ask_model(self, messages, stop, max_tokens=200, response_format=None):
+    def ask_model(self, messages, stop, max_tokens=200, response_format=None, **kwargs):
         if messages[-1]['role'] == "assistant":
             prefix = messages[-1]['content']
         else:
             prefix = ""
-        response = self.chat_complete(messages, stop, max_tokens, response_format=response_format)
+        response = self.chat_complete(messages, stop, max_tokens, response_format=response_format, **kwargs)
         messages = self.update_last_message(messages, response, prefix=prefix, suffix=stop)
         return response, messages
         

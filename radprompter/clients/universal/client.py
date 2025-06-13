@@ -106,7 +106,7 @@ class UniversalClient(Client):
 
         super().__init__(model)
 
-    def chat_complete(self, messages, stop=None, max_tokens=None, response_format=None):
+    def chat_complete(self, messages, stop=None, max_tokens=None, response_format=None, **kwargs):
         """
         Complete a chat conversation using LiteLLM.
         
@@ -128,6 +128,7 @@ class UniversalClient(Client):
             "frequency_penalty": self.frequency_penalty,
             "presence_penalty": self.presence_penalty,
             "stream": False,
+            **kwargs
         }
         
         # Add optional parameters if they exist
