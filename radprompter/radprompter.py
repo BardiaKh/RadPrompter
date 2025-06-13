@@ -6,7 +6,7 @@ from tqdm import tqdm
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import csv
-from .clients import UniversalClient, HuggingFaceClient
+from .clients import HuggingFaceClient, OpenAIClient
 from .__version__ import __version__
 
 class RadPrompter():
@@ -24,8 +24,8 @@ class RadPrompter():
         if file_exists:
             print(f"WARNING: Output file {self.output_file} already exists. The file will be **replaced** if you proceed with running the engine.")
         
-        if isinstance(self.client, UniversalClient) and self.prompt.response_templates.count("") != prompt.num_turns:
-            print("WARNING: Universal-based clients do not accept response templates and will be ignored.")
+        if isinstance(self.client, OpenAIClient) and self.prompt.response_templates.count("") != prompt.num_turns:
+            print("WARNING: OpenAI models do not accept response templates and will be ignored.")
             self.prompt.response_templates = [""]*prompt.num_turns
             
         if isinstance(self.client, HuggingFaceClient) and self.concurrency > 1:
@@ -157,32 +157,3 @@ class RadPrompter():
             
             f.close()
             
-    def sanitize_json(self, variable_name="all"):
-        df = pd.read_csv(self.output_file, index_col='index')
-
-        if variable_name == "all":
-            for schema in self.prompt.schemas.schemas:
-                if schema["type"] == "select":
-                    column_name = f"{schema['variable_name']}_response"
-                    options = schema["options"]
-                    df[column_name] = df[column_name].apply(lambda x: self._sanitize_response(x, options))
-        else:
-            schema = next((s for s in self.prompt.schemas.schemas if s["variable_name"] == variable_name), None)
-            if schema and schema["type"] == "select":
-                column_name = f"{schema['variable_name']}_response"
-                options = schema["options"]
-                df[column_name] = df[column_name].apply(lambda x: self._sanitize_response(x, options))
-
-        return df
-
-    def _sanitize_response(self, response, options):
-        matches = []
-        for option in options:
-            pattern = r'\b' + re.escape(option) + r'\b'
-            if re.search(pattern, response, re.IGNORECASE):
-                matches.append(option)
-
-        if len(matches) == 1:
-            return matches[0]
-        else:
-            return "**RECHECK** " + response
