@@ -8,38 +8,6 @@ description = "A sample prompt for RadPrompter"
 system_prompt = "You are a helpful assistant that has 20 years of experience in reading radiology reports and extracting data elements."
 
 user_prompt_intro = """
-{{intro_prompt}}
-"""
-
-user_prompt_no_cot = """
-I want you to extract the following data element from the report: 
-{{hint}}
-
-Your final answer elements in a valid JSON format and is between <json> and </json> tags:
-
-<json>
-{
-  "{{variable_name}}": "answer"
-}
-</json>
-"""
-
-assistant_response_template = """
-<json>
-{
-  "{{variable_name}}" : \""""
-
-[CONSTRUCTOR]
-system = "rdp(system_prompt)"
-user = "rdp(user_prompt_intro + user_prompt_no_cot)"
-response_templates = "rdp(assistant_response_template)"
-stop_tags = "</json>"
-
-[SCHEMAS]
-
-[SCHEMAS.PulmonaryEmbolism]
-variable_name = "Pulmonary Embolism"
-intro_prompt = """
 Carefully review the provided chest CT report (in the <report> tag). Ensure that each data element is accurately captured.
 
 Here is the report:
@@ -54,35 +22,27 @@ Please pay attention to the following details:
 - We are interested at findings at the time of scan, not the previous ones, so only consider the impression and findings sections of the report.
 - Do not print anything else other than the provided output format.
 """
-type = "select"
-options = ["Present", "Absent"]
-hint = """"Indicate `Present` if the report explicitly mentions the patient has pulmonary embolism in their CT scan. 
-Indicate `Absent` if pulmonary embolism is not seen or if a previously observed pulmonary embolism is mentioned as resolved."""
-show_options_in_hint = true
 
-[SCHEMAS.Laterality]
-variable_name = "Laterality"
-intro_prompt = ""
-type = "select"
-options = ["Left", "Right", "Bilateral", "Not Mentioned"]
-hint = """
-Indicate `Left` if the report explicitly mentions the patient has a left-sided pulmonary embolism in their CT scan. 
-Indicate `Right` if the report explicitly mentions the patient has a right-sided pulmonary embolism in their CT scan. 
-Indicate `Bilateral` if the report explicitly mentions the patient has a bilateral pulmonary embolism in their CT scan or if patient has both left and right sided pulmonary embolism.
-Indicate `Not Mentioned` if side of pulmonary embolism is not mentioned.
+user_prompt_no_cot = """
+I want you to extract the following data element from the report: 
+Pulmonary Embolism:
+Indicate `Present` if the report explicitly mentions the patient has pulmonary embolism in their CT scan. 
+Indicate `Absent` if pulmonary embolism is not seen or if a previously observed pulmonary embolism is mentioned as resolved.
+
+Your final answer elements in a valid JSON format and is between <json> and </json> tags:
+
+<json>
+{
+  "Pulmonary Embolism": "answer"
+}
+</json>
 """
-show_options_in_hint = true
 
+assistant_response_template = """{
+"Pulmonary Embolism" : """
 
-[SCHEMAS.Acuity]
-variable_name = "Acuity"
-intro_prompt = ""
-type = "select"
-options = ["Acute", "Chronic", "Mixed", "Not Mentioned"]
-hint = """
-Indicate `Acute` if the report explicitly mentions the patient has an acute pulmonary embolism in their CT scan. 
-Indicate `Chronic` if the report explicitly mentions the patient has a chronic pulmonary embolism in their CT scan. 
-Indicate `Mixed` if the report explicitly mentions the patient has a acute on chronic pulmonary embolism in their CT scan. 
-Indicate `Not Mentioned` if acuity of pulmonary embolism is not mentioned.
-"""
-show_options_in_hint = true
+[CONSTRUCTOR]
+system = "rdp(system_prompt)"
+user = "rdp(user_prompt_intro + user_prompt_no_cot)"
+response_templates = "rdp(assistant_response_template)"
+stop_tags = "</json>"
