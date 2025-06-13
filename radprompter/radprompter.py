@@ -40,9 +40,9 @@ class RadPrompter():
         # Populate Pydantic models if use_pydantic is True
         if self.use_pydantic:
             if len(self.prompt.schemas.schemas) == 1 and self.prompt.schemas.schemas[0]['type']=="default":
-                self.prompt.schemas.populate_pydantic_models()
-            else:
                 self.use_pydantic = False
+            else:
+                self.prompt.schemas.populate_pydantic_models()
         
         if self.use_pydantic:
             if self.prompt.stop_tags.count("") != self.prompt.num_turns or self.prompt.response_templates.count("") != self.prompt.num_turns:
