@@ -68,7 +68,7 @@ class RadPrompter():
                 # Get response format if using Pydantic
                 response_format = None
                 if self.use_pydantic and schema.get('pydantic_model'):
-                    response_format = prompt.schemas.get_schema_json_schema(schema_idx)
+                    response_format = prompt.schemas.get_pydantic_model(schema_idx)
                                 
                 for i in range(prompt.num_turns):
                     messages.append({"role": "user", "content": prompt_with_schema.user_prompts[i]})

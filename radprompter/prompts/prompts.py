@@ -275,13 +275,6 @@ class Schemas:
         """Get the Pydantic model for a specific schema"""
         return self.schemas[index].get('pydantic_model')
     
-    def get_schema_json_schema(self, index):
-        """Get the JSON schema for a specific schema's Pydantic model"""
-        pydantic_model = self.get_pydantic_model(index)
-        if pydantic_model:
-            return pydantic_model.model_json_schema()
-        return None
-
     def __getitem__(self, index):
         schema = self.schemas[index]
         prompt_copy = deepcopy(self.prompt)
