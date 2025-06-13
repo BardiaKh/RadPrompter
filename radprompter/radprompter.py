@@ -92,6 +92,7 @@ class RadPrompter():
                         messages.append({"role": "assistant", "content": prompt_with_schema.response_templates[i]})
                         if self.client.provider == "hosted_vllm":
                             additional_generation_params['continue_final_message'] = True
+                            additional_generation_params['add_generation_prompt'] = False
                     
                     response, messages = self.client.ask_model(
                         messages, 
