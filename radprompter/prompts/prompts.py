@@ -5,9 +5,7 @@ try: import tomllib
 except ModuleNotFoundError: import pip._vendor.tomli as tomllib
 import hashlib
 from copy import deepcopy
-from pydantic import BaseModel, Field, create_model
-from typing import Literal, Union, Optional
-from enum import Enum
+from .schemas import Schemas
 
 try: 
     from IPython.display import HTML, display
@@ -233,61 +231,3 @@ class Prompt:
         return text.replace("{{", "<span style='background-color: rgb(255, 224, 178, 0.3);'>{{").replace("}}", "}}</span>")
     
     
-class Schemas:
-    def __init__(self, prompt, schemas):
-        self.prompt = prompt
-        self.schemas = schemas
-
-    def create_pydantic_model_for_schema(self, schema):
-        """Create a Pydantic model for a single schema"""
-        variable_name = schema['variable_name']
-        schema_type = schema['type']
-        
-        # Determine field type and constraints
-        if schema_type == "select":
-            # Create enum for select type with choices
-            assert "options" in schema, "Schema of type 'select' should have an 'options' key."
-            options = schema['options']
-            enum_class = Enum(f"{variable_name.title()}Enum", {opt: opt for opt in options})
-            field_type = enum_class
-            field_info = Field(description=schema.get('hint', ""))
-        elif schema_type == "int":
-            field_type = int
-            field_info = Field(description=schema.get('hint', ""))
-        elif schema_type == "float":
-            field_type = float
-            field_info = Field(description=schema.get('hint', ""))
-        elif schema_type == "string":
-            field_type = str
-            field_info = Field(description=schema.get('hint', ""))
-        else:
-            raise ValueError(f"Unknown schema type: {schema_type}")
-        
-        # Create the dynamic model
-        model_name = f"{variable_name.title()}Model"
-        model_fields = {variable_name: (field_type, field_info)}
-        
-        pydantic_model = create_model(model_name, **model_fields)
-        return pydantic_model
-
-    def populate_pydantic_models(self):
-        """Populate Pydantic models for all schemas"""
-        for schema in self.schemas:
-            if schema['type'] != "default":
-                schema['pydantic_model'] = self.create_pydantic_model_for_schema(schema)
-                if schema.get('show_options_in_hint', False):
-                    schema_text = f"\n\nRespond with a JSON object following this schema: {schema['pydantic_model'].model_json_schema()}"
-                    schema['hint'] += schema_text
-    
-    def get_pydantic_model(self, index):
-        """Get the Pydantic model for a specific schema"""
-        return self.schemas[index].get('pydantic_model')
-    
-    def __getitem__(self, index):
-        schema = self.schemas[index]
-        prompt_copy = deepcopy(self.prompt)
-        prompt_copy.replace_placeholders(schema)
-        return prompt_copy
-
-    def __len__(self):
-        return len(self.schemas)

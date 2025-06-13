@@ -98,7 +98,10 @@ class RadPrompter():
                         response_format=response_format,
                         **additional_generation_params
                     )
-                    schema_response.append(response)
+                    
+                    # Parse the response if using Pydantic
+                    parsed_response = self.prompt.schemas.parse_response(response, schema_idx)
+                    schema_response.append(parsed_response)
                                                                                         
                 if len(schema_response) == 1:
                     item_response.append({f"{schema['variable_name']}_response":schema_response[0]})
