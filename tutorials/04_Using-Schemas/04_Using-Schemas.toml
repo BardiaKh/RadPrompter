@@ -1,6 +1,4 @@
-
 [METADATA]
-
 version = 0.1
 description = "A sample prompt for RadPrompter"
 
@@ -12,6 +10,7 @@ user_prompt_intro = "{{intro_prompt}}\n"
 
 user_prompt_no_cot = """
 I want you to extract the following data element from the report: 
+{{variable_name}}:
 {{hint}}
 
 Provide a single answer:
@@ -23,10 +22,6 @@ system = "rdp(system_prompt)"
 user = [
 "rdp(user_prompt_intro + user_prompt_no_cot)"
 ]
-stop_tags = [
-" "
-]
-
 
 [SCHEMAS]
 [SCHEMAS.PulmonaryEmbolism]
@@ -54,8 +49,53 @@ Indicate `Present` if the report explicitly mentions the patient has pulmonary e
 Indicate `Absent` if pulmonary embolism is not seen or if a previously observed pulmonary embolism is mentioned as resolved.
 """
 
+[SCHEMAS.PatientAge]
+variable_name = "Patient Age"
+intro_prompt = ""
+type = "int"
+show_options_in_hint = false
+hint = """
+Extract the patient's age in years from the report. If age is not explicitly mentioned, respond with -1.
+Provide only the numerical value (e.g., 65).
+"""
+
+[SCHEMAS.LesionSize]
+variable_name = "Largest Lesion Size"
+intro_prompt = ""
+type = "float"
+show_options_in_hint = false
+hint = """
+Extract the size of the largest lesion mentioned in the report in centimeters.
+If multiple dimensions are given, use the largest dimension.
+If no lesion size is mentioned, respond with -1.0.
+Provide only the numerical value (e.g., 2.5).
+"""
+
+[SCHEMAS.ClinicalImpression]
+variable_name = "Clinical Impression"
+intro_prompt = ""
+type = "string"
+show_options_in_hint = false
+hint = """
+Extract the main clinical impression or conclusion from the report.
+Provide the exact text from the impression section, or summarize the key findings if no explicit impression is stated.
+If no clear impression is available, respond with "Not specified".
+"""
+
+[SCHEMAS.NumberOfEmboli]
+variable_name = "Number of Pulmonary Emboli"
+intro_prompt = ""
+type = "int"
+show_options_in_hint = false
+hint = """
+Count the number of pulmonary emboli explicitly mentioned in the report.
+If the report mentions "multiple" without a specific count, respond with -1.
+If no emboli are present, respond with 0.
+Provide only the numerical count.
+"""
+
 [SCHEMAS.Left]
-variable_name = "Left"
+variable_name = "Left-sided Pulmonary Embolism"
 intro_prompt = ""
 type = "select"
 options = ["Yes", "No"]
@@ -67,7 +107,7 @@ Indicate `No` if the report doesn't explicitly mentions the patient has a left-s
 """
 
 [SCHEMAS.Right]
-variable_name = "Right"
+variable_name = "Right-sided Pulmonary Embolism"
 type = "select"
 intro_prompt = ""
 options = ["Yes", "No"]
@@ -79,7 +119,7 @@ Indicate `No` if the report doesn't explicitly mentions the patient has a right-
 """
 
 [SCHEMAS.Acute]
-variable_name = "Acute"
+variable_name = "Acute Pulmonary Embolism"
 type = "select"
 intro_prompt = ""
 options = ["Yes", "No"]
@@ -90,7 +130,7 @@ Indicate `No` if the report doesn't explicitly mentions the patient has an acute
 """
 
 [SCHEMAS.Chronic]
-variable_name = "Chronic"
+variable_name = "Chronic Pulmonary Embolism"
 type = "select"
 intro_prompt = ""
 options = ["Yes", "No"]
@@ -100,9 +140,8 @@ Indicate `Yes` if the report explicitly mentions the patient has an chronic pulm
 Indicate `No` if the report doesn't explicitly mentions the patient has an chronic pulmonary embolism in their CT scan. 
 """
 
-
 [SCHEMAS.RightHeartStrain]
-variable_name = "RightHeartStrain"
+variable_name = "Right Heart Strain"
 type = "select"
 intro_prompt = ""
 options = ["Yes", "No"]
@@ -113,7 +152,7 @@ Indicate `No` if the report doesn't explicitly mentions that the patient has a r
 """
 
 [SCHEMAS.PulmonaryArteryHypertension]
-variable_name = "PulmonaryArteryHypertension"
+variable_name = "Pulmonary Artery Hypertension"
 type = "select"
 intro_prompt = ""
 options = ["Yes", "No"]

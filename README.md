@@ -40,8 +40,8 @@ from radprompter import Prompt, RadPrompter, vLLMClient
 prompt = Prompt("sample.toml")
 
 client = vLLMClient(
-    model="meta-llama/Meta-Llama-3-8B-Instruct",
-    base_url="http://localhost:9999/v1",
+    model="google/medgemma-4b-it",
+    base_url="http://localhost:8000/v1",
     temperature=0.0,
     seed=42
 )
@@ -68,6 +68,7 @@ For more details and advanced usage, check out our tutorials.
 | 04_Using-Schemas            | Shows how to use schemas for structured output      | [👁️](https://nbviewer.org/github/BardiaKh/RadPrompter/blob/main/tutorials/04_Using-Schemas/04_Using-Schemas.ipynb) [📓](./tutorials/04_Using-Schemas)     |
 | 05_JSON-Prefill        | Covers using JSON prefills and sanitization                     | [👁️](https://nbviewer.org/github/BardiaKh/RadPrompter/blob/main/tutorials/05_JSON-Prefill/05_JSON-Prefill.ipynb) [📓](./tutorials/05_JSON-Prefill)  |
 | 06_HuggingFace-Client        | Covers using the new `HuggingFaceClient`                     | [👁️](https://nbviewer.org/github/BardiaKh/RadPrompter/blob/main/tutorials/06_HuggingFace-Client/06_HuggingFace-Client.ipynb) [📓](./tutorials/06_HuggingFace-Client)  |
+| 07_Conditional-Schemas      | Demonstrates how to use conditional schemas (v2.0+)         | [👁️](https://nbviewer.org/github/BardiaKh/RadPrompter/blob/main/tutorials/07_Conditional-Schemas/07_Conditional-Schemas.ipynb) [📓](./tutorials/07_Conditional-Schemas) |
 
 ## Contributing
 
