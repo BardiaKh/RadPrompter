@@ -39,6 +39,9 @@ class HuggingFaceClient(Client):
         self.seed = kwargs.pop("seed", None)
         self.frequency_penalty = kwargs.pop("frequency_penalty", 0.0)
 
+        # Detect model device
+        self.model_device = next(self.hf_model.parameters()).device
+
         self.provider = "huggingface"
         
         super().__init__(model_name)
@@ -66,12 +69,15 @@ class HuggingFaceClient(Client):
                 return_tensors="pt"
             )
 
+        # Move input tensors to the same device as the model
+        tokenized_chat = {k: v.to(self.model_device) for k, v in tokenized_chat.items()}
+
         stopping_criteria_list = StoppingCriteriaList()
         if stop:
             stopping_criteria_list.append(StopStringCriteria(stop, self.hf_tokenizer))
 
         outputs = self.hf_model.generate(
-            tokenized_chat, 
+            **tokenized_chat, 
             max_new_tokens=max_tokens, 
             temperature=self.temperature, 
             top_p=self.top_p, 
@@ -79,7 +85,7 @@ class HuggingFaceClient(Client):
             stopping_criteria=stopping_criteria_list
         )
 
-        prompt_size = tokenized_chat.size(-1)
+        prompt_size = tokenized_chat['input_ids'].size(-1)
         answer_tokens = outputs[0, prompt_size:]
         answer_text = self.hf_tokenizer.decode(answer_tokens, skip_special_tokens=True)
 
