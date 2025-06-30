@@ -77,7 +77,7 @@ class HuggingFaceClient(Client):
             stopping_criteria_list.append(StopStringCriteria(stop, self.hf_tokenizer))
 
         outputs = self.hf_model.generate(
-            **tokenized_chat, 
+            tokenized_chat, 
             max_new_tokens=max_tokens, 
             temperature=self.temperature, 
             top_p=self.top_p, 
