@@ -55,41 +55,46 @@ class HuggingFaceClient(Client):
             # Use continue_final_message=True to properly handle turn tokens
             tokenized_chat = self.hf_tokenizer.apply_chat_template(
                 messages, 
-                tokenize=True, 
+                return_dict=True, 
                 continue_final_message=True, 
                 return_tensors="pt"
             )
         else:
             tokenized_chat = self.hf_tokenizer.apply_chat_template(
                 messages, 
-                tokenize=True, 
+                return_dict=True, 
                 add_generation_prompt=True, 
                 return_tensors="pt"
             )
 
-        if isinstance(tokenized_chat, dict):
-            tokenized_chat = {k: v.to(self.model_device) for k, v in tokenized_chat.items()}
-        else:
-            tokenized_chat = tokenized_chat.to(self.model_device)
+        tokenized_chat = {k: v.to(self.model_device) for k, v in tokenized_chat.items()}
 
         stopping_criteria_list = StoppingCriteriaList()
         if stop:
             stopping_criteria_list.append(StopStringCriteria(stop, self.hf_tokenizer))
 
+        generation_kwargs = {
+            "max_new_tokens": max_tokens,
+            "num_return_sequences": 1,
+            "stopping_criteria": stopping_criteria_list
+        }
+        
+        if self.temperature == 0:
+            generation_kwargs["do_sample"] = False
+            generation_kwargs["temperature"] = None
+            generation_kwargs["top_p"] = None
+            generation_kwargs["top_k"] = None
+        else:
+            generation_kwargs["do_sample"] = True
+            generation_kwargs["temperature"] = self.temperature
+            generation_kwargs["top_p"] = self.top_p
+
         outputs = self.hf_model.generate(
-            tokenized_chat, 
-            max_new_tokens=max_tokens, 
-            temperature=self.temperature, 
-            top_p=self.top_p, 
-            num_return_sequences=1,
-            stopping_criteria=stopping_criteria_list
+            **tokenized_chat, 
+            **generation_kwargs
         )
 
-        if isinstance(tokenized_chat, dict):
-            prompt_size = tokenized_chat['input_ids'].size(-1)
-        else:
-            prompt_size = tokenized_chat.size(-1)
-
+        prompt_size = tokenized_chat['input_ids'].size(-1)
         answer_tokens = outputs[0, prompt_size:]
         answer_text = self.hf_tokenizer.decode(answer_tokens, skip_special_tokens=True)
 

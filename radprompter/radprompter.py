@@ -186,7 +186,11 @@ class RadPrompter():
         self.log['Duration'] = (datetime.strptime(self.log['End Time'], '%Y-%m-%d %H:%M:%S') - 
                                 datetime.strptime(self.log['Start Time'], '%Y-%m-%d %H:%M:%S')).total_seconds()
         self.log['Number of Items'] = len(items)
-        self.log['Average Processing Time'] = self.log['Duration'] / self.log['Number of Items']                
+        self.log['Average Processing Time'] = self.log['Duration'] / self.log['Number of Items']
+        
+        # Add log metadata as comments at the beginning of the CSV file
+        if self.output_file is not None:
+            self._add_metadata_to_csv()
     
     def save_log(self, log_dir="./RadPrompter.log"):
         with open(log_dir, "w") as f:
@@ -202,3 +206,25 @@ class RadPrompter():
             
             f.close()
             
+    def _add_metadata_to_csv(self):
+        with open(self.output_file, "r") as f:
+            lines = f.readlines()
+        
+        with open(self.output_file, "w") as f:
+            f.write(f"# RadPrompter Version: {self.log['RadPrompter Version']}\n")
+            f.write(f"# Model: {self.log['Model']}\n")
+            f.write(f"# Seed: {self.log['Seed']}\n")
+            f.write(f"# Temperature: {self.log['Temperature']}\n")
+            f.write(f"# Frequency Penalty: {self.log['Frequency Penalty']}\n")
+            f.write(f"# Top-P: {self.log['Top-P']}\n")
+            f.write(f"# Prompt TOML: {self.log['Prompt TOML']}\n")
+            f.write(f"# Prompt Version: {self.log['Prompt Version']}\n")
+            f.write(f"# Prompt Hash: {self.log['Prompt Hash']}\n")
+            f.write(f"# Concurrency Factor: {self.log['Concurrency Factor']}\n")
+            f.write(f"# Use Pydantic: {self.log['Use Pydantic']}\n")
+            f.write(f"# Start Time: {self.log['Start Time']}\n")
+            f.write(f"# End Time: {self.log['End Time']}\n")
+            f.write(f"# Duration: {self.log['Duration']}\n")
+            f.write(f"# Number of Items: {self.log['Number of Items']}\n")
+            f.write(f"# Average Processing Time: {self.log['Average Processing Time']}\n")
+            f.write("\n")
