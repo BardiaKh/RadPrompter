@@ -49,22 +49,7 @@ jobs:
       run: |
         echo "Publishing version ${{ steps.version_check.outputs.current_version }} to PyPI..."
         flit publish
-    
-    - name: Create GitHub Release
-      if: steps.version_check.outputs.version_exists == 'false'
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: v${{ steps.version_check.outputs.current_version }}
-        release_name: Release v${{ steps.version_check.outputs.current_version }}
-        body: |
-          Automated release for version ${{ steps.version_check.outputs.current_version }}
-          
-          This release was automatically created when the pull request was merged.
-        draft: false
-        prerelease: false
-    
+        
     - name: Skip publishing - version exists
       if: steps.version_check.outputs.version_exists == 'true'
       run: |
