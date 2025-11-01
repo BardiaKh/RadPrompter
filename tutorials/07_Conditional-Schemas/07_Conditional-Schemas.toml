@@ -1,0 +1,80 @@
+[METADATA]
+version = 0.1
+description = "A sample prompt demonstrating conditional schemas for RadPrompter"
+
+[PROMPTS]
+
+system_prompt = "You are a helpful assistant that has 20 years of experience in reading radiology reports and extracting data elements."
+
+user_prompt_intro = """
+Carefully review the provided chest CT report (in the <report> tag). Ensure that each data element is accurately captured.
+
+Here is the report:
+<report>
+{{report}}
+</report>
+
+Please pay attention to the following details:
+- Your attention to detail is crucial for maintaining the integrity of the medical records. 
+- You should not confabulate information, and if something is not mentioned, you should assume that it is `Absent` unless otherwise stated.
+- The report may contain additional information that is not relevant to the requested data elements. Please ignore that information.
+- We are interested at findings at the time of scan, not the previous ones, so only consider the impression and findings sections of the report.
+- Do not print anything else other than the provided output format.
+"""
+
+user_prompt_no_cot = """
+I want you to extract the following data element from the report: 
+{{variable_name}}:
+{{hint}}
+
+Provide a single answer:
+
+"""
+
+[CONSTRUCTOR]
+system = "rdp(system_prompt)"
+user = [
+"rdp(user_prompt_intro + user_prompt_no_cot)"
+]
+
+[SCHEMAS]
+[SCHEMAS.PulmonaryEmbolism]
+variable_name = "Pulmonary Embolism"
+intro_prompt = """
+Carefully review the provided chest CT report (in the <report> tag). Ensure that each data element is accurately captured.
+
+Here is the report:
+<report>
+{{report}}
+</report>
+
+Please pay attention to the following details:
+- Your attention to detail is crucial for maintaining the integrity of the medical records. 
+- You should not confabulate information, and if something is not mentioned, you should assume that it is `Absent` unless otherwise stated.
+- The report may contain additional information that is not relevant to the requested data elements. Please ignore that information.
+- We are interested at findings at the time of scan, not the previous ones, so only consider the impression and findings sections of the report.
+- Do not print anything else other than the provided output format.
+"""
+type = "select"
+options = ["Present", "Absent", "Indeterminate"]
+show_options_in_hint = true
+hint = """
+Determine if there is evidence of pulmonary embolism in the CT scan report.
+Select 'Present' if pulmonary embolism is explicitly mentioned.
+Select 'Absent' if no pulmonary embolism is mentioned or explicitly ruled out.
+Select 'Indeterminate' if the report is unclear about pulmonary embolism status.
+"""
+
+[SCHEMAS.EmbolismType]
+variable_name = "Embolism Type"
+intro_prompt = ""
+type = "select"
+options = ["Sub-segmental", "Segmental", "Main pulmonary artery", "Not applicable"]
+depends_on = {schema = "Pulmonary Embolism", condition = "Present", default_value = "Not applicable"}
+show_options_in_hint = true
+hint = """
+If pulmonary embolism is present, classify the anatomical location and extent.
+Select 'Sub-segmental' for small peripheral emboli.
+Select 'Segmental' for emboli in segmental arteries.
+Select 'Main pulmonary artery' for central emboli in main PA or lobar arteries.
+"""

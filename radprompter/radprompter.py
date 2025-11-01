@@ -1,35 +1,54 @@
 import os
 import pandas as pd
 import re
+import warnings
 from copy import deepcopy
 from tqdm import tqdm
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import csv
-from .clients import OpenAIClient, HuggingFaceClient
+from .clients import HuggingFaceClient, OpenAIClient
 from .__version__ import __version__
 
 class RadPrompter():
-    def __init__(self, client, prompt, output_file, hide_blocks=False, concurrency=1, max_generation_tokens=4096, max_generation_tokens=4096):
+    def __init__(self, client, prompt, output_file, hide_blocks=False, concurrency=1, max_generation_tokens=4096, use_pydantic=True):
         self.client = client
         self.prompt = prompt
         self.hide_blocks = hide_blocks
         self.concurrency = concurrency
         self.output_file = output_file
         self.max_generation_tokens = max_generation_tokens
+        self.use_pydantic = use_pydantic
         assert self.output_file.endswith(".csv"), "Output file must be a .csv file"
         file_exists = os.path.isfile(self.output_file)
         
         if file_exists:
-            print(f"WARNING: Output file {self.output_file} already exists. The file will be **replaced** if you proceed with running the engine.")
+            warnings.warn(f"Output file {self.output_file} already exists. The file will be **replaced** if you proceed with running the engine.")
         
-        if type(self.client) == OpenAIClient and self.prompt.response_templates.count("") != prompt.num_turns:
-            print("WARNING: OpenAI client does not accept response templates and will be ignored.")
+        if isinstance(self.client, OpenAIClient) and self.prompt.response_templates.count("") != prompt.num_turns:
+            warnings.warn("OpenAI models do not accept response templates and will be ignored.")
             self.prompt.response_templates = [""]*prompt.num_turns
             
         if isinstance(self.client, HuggingFaceClient) and self.concurrency > 1:
-            print("WARNING: HuggingFace client does not support concurrency > 1 and will be set to 1.")
+            warnings.warn("HuggingFace client does not support concurrency > 1 and will be set to 1.")
             self.concurrency = 1
+        
+        if isinstance(self.client, HuggingFaceClient) and self.use_pydantic:
+            warnings.warn("HuggingFace client does not support Pydantic models and will be set to False.")
+            self.use_pydantic = False
+        
+        # Populate Pydantic models if use_pydantic is True
+        if self.use_pydantic:
+            if len(self.prompt.schemas.schemas) == 1 and self.prompt.schemas.schemas[0]['type']=="default":
+                self.use_pydantic = False
+            else:
+                self.prompt.schemas.populate_pydantic_models()
+        
+        if self.use_pydantic:
+            if self.prompt.stop_tags.count("") != self.prompt.num_turns or self.prompt.response_templates.count("") != self.prompt.num_turns:
+                warnings.warn("Pydantic models do not support stop tags and response templates and will be ignored.")
+                self.prompt.reset_stop_tags()
+                self.prompt.reset_response_templates()
         
         self.log = {
             "RadPrompter Version": __version__,
@@ -42,6 +61,7 @@ class RadPrompter():
             "Prompt Version": self.prompt.version,
             "Prompt Hash": self.prompt.md5_hash,
             "Concurrency Factor": self.concurrency,
+            "Use Pydantic": self.use_pydantic,
         }
         
     def process_single_item(self, item, index):
@@ -51,34 +71,75 @@ class RadPrompter():
             {"role": "system", "content": prompt.system_prompt},
         ]
         item_response = []
-        for schema in prompt.schemas.schemas:
+        previous_responses = {}  # Store responses for dependency checking
+        
+        # Get schemas in dependency order
+        schema_order = prompt.schemas.get_dependency_order()
+        
+        for schema_idx in schema_order:
+            schema = prompt.schemas.schemas[schema_idx]
             try:
+                # Check if this schema should be processed based on dependencies
+                should_process, default_value = prompt.schemas.should_process_schema(schema_idx, previous_responses)
+                
+                if not should_process:
+                    # Use default value for skipped schema
+                    response_key = f"{schema['variable_name']}_response"
+                    previous_responses[response_key] = default_value
+                    item_response.append({response_key: default_value})
+                    continue
+                
                 schema_response = []
                 prompt_with_schema = deepcopy(prompt)
                 merged_dict = deepcopy(schema)
                 merged_dict.update(item)
                 prompt_with_schema.replace_placeholders(merged_dict)
-            
+                
+                additional_generation_params = {}
+                
+                # Get response format if using Pydantic
+                response_format = None
+                if self.use_pydantic and schema.get('pydantic_model'):
+                    response_format = prompt.schemas.get_pydantic_model(schema_idx)
+                                
                 for i in range(prompt.num_turns):
                     messages.append({"role": "user", "content": prompt_with_schema.user_prompts[i]})
                     if prompt.response_templates[i] != "":
                         messages.append({"role": "assistant", "content": prompt_with_schema.response_templates[i]})
                     
-                    response, messages = self.client.ask_model(messages, prompt_with_schema.stop_tags[i], max_tokens=self.max_generation_tokens, max_tokens=self.max_generation_tokens)
-                    schema_response.append(response)
+                    response, messages = self.client.ask_model(
+                        messages, 
+                        prompt_with_schema.stop_tags[i], 
+                        max_tokens=self.max_generation_tokens, 
+                        response_format=response_format,
+                        **additional_generation_params
+                    )
+                    
+                    # Parse the response if using Pydantic
+                    parsed_response = self.prompt.schemas.parse_response(response, schema_idx)
+                    schema_response.append(parsed_response)
                                                                                         
                 if len(schema_response) == 1:
-                    item_response.append({f"{schema['variable_name']}_response":schema_response[0]})
+                    response_key = f"{schema['variable_name']}_response"
+                    response_value = schema_response[0]
+                    previous_responses[response_key] = response_value
+                    item_response.append({response_key: response_value})
                 else:
                     for r, schema_response_ in enumerate(schema_response):    
-                        item_response.append({f"{schema['variable_name']}_response_{r}":schema_response_})
+                        response_key = f"{schema['variable_name']}_response_{r}"
+                        previous_responses[response_key] = schema_response_
+                        item_response.append({response_key: schema_response_})
                             
                 if self.hide_blocks:
                     messages = [
                         {"role": "system", "content": prompt.system_prompt},
                     ]
             except Exception as e:
-                print(f"Error processing schema {schema['variable_name']} for item {index}: {e}.. You might need to increase engine's `max_generation_tokens` parameters.")
+                print(f"Error processing schema {schema['variable_name']} for item {index}: {e}")
+                # Add empty response for failed schema to maintain consistency
+                response_key = f"{schema['variable_name']}_response"
+                previous_responses[response_key] = ""
+                item_response.append({response_key: "ERROR"})
         
         return index, item_response
 
@@ -125,7 +186,11 @@ class RadPrompter():
         self.log['Duration'] = (datetime.strptime(self.log['End Time'], '%Y-%m-%d %H:%M:%S') - 
                                 datetime.strptime(self.log['Start Time'], '%Y-%m-%d %H:%M:%S')).total_seconds()
         self.log['Number of Items'] = len(items)
-        self.log['Average Processing Time'] = self.log['Duration'] / self.log['Number of Items']                
+        self.log['Average Processing Time'] = self.log['Duration'] / self.log['Number of Items']
+        
+        # Add log metadata as comments at the beginning of the CSV file
+        if self.output_file is not None:
+            self._add_metadata_to_csv()
     
     def save_log(self, log_dir="./RadPrompter.log"):
         with open(log_dir, "w") as f:
@@ -141,32 +206,12 @@ class RadPrompter():
             
             f.close()
             
-    def sanitize_json(self, variable_name="all"):
-        df = pd.read_csv(self.output_file, index_col='index')
+    def _add_metadata_to_csv(self):
+        with open(self.output_file, "r") as f:
+            original_lines = f.readlines()
+        
+        with open(self.output_file, "w") as f:
+            for key, value in self.log.items():
+                f.write(f"#{key}: {value}\n")
 
-        if variable_name == "all":
-            for schema in self.prompt.schemas.schemas:
-                if schema["type"] == "select":
-                    column_name = f"{schema['variable_name']}_response"
-                    options = schema["options"]
-                    df[column_name] = df[column_name].apply(lambda x: self._sanitize_response(x, options))
-        else:
-            schema = next((s for s in self.prompt.schemas.schemas if s["variable_name"] == variable_name), None)
-            if schema and schema["type"] == "select":
-                column_name = f"{schema['variable_name']}_response"
-                options = schema["options"]
-                df[column_name] = df[column_name].apply(lambda x: self._sanitize_response(x, options))
-
-        return df
-
-    def _sanitize_response(self, response, options):
-        matches = []
-        for option in options:
-            pattern = r'\b' + re.escape(option) + r'\b'
-            if re.search(pattern, response, re.IGNORECASE):
-                matches.append(option)
-
-        if len(matches) == 1:
-            return matches[0]
-        else:
-            return "**RECHECK** " + response
+            f.writelines(original_lines)

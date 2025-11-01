@@ -5,6 +5,7 @@ try: import tomllib
 except ModuleNotFoundError: import pip._vendor.tomli as tomllib
 import hashlib
 from copy import deepcopy
+from .schemas import Schemas
 
 try: 
     from IPython.display import HTML, display
@@ -41,31 +42,38 @@ class Prompt:
         
         assert len(self.user_prompts) == len(self.response_templates) == len(self.stop_tags), "Number of user prompts, response templates, and stop tags should be the same."
     
-    def process_schema(self, schema):
+    def process_single_schema(self, schema):
         processed_schema = []
         for item in schema:
             assert "variable_name" in item, "Schema item should have a 'variable_name' key."
-            hint = f"'{item['variable_name']}'\n"
-            if item['type'] == "select":
-                if item['show_options_in_hint']:
-                    hint += "Here are your options and you can explicitly use one of these:\n  - " + "\n  - ".join(f"`{i}`" for i in item['options']) + "\n\n"
-
-            hint += "Hint: " + item['hint']
-
-            other_values = {k:v for k,v in item.items() if k not in ["variable_name", "type", "options", "hint", "show_options_in_hint"]}
+            assert "type" in item, "Schema item should have a 'type' key."
+            assert item['type'] in ["int", "float", "string", "select"], "Schema item should have a 'type' key with one of the following values: int, float, string, select."
+            
+            # Validate depends_on field if present
+            if "depends_on" in item:
+                depends_on = item["depends_on"]
+                if not isinstance(depends_on, dict):
+                    raise ValueError(f"depends_on for schema '{item['variable_name']}' must be a dictionary")
+                
+                required_keys = ['schema', 'condition']
+                if not all(key in depends_on for key in required_keys):
+                    raise ValueError(f"depends_on for schema '{item['variable_name']}' must contain 'schema' and 'condition' keys")
+            
+            other_values = {k:v for k,v in item.items() if k not in ["variable_name", "type", "hint", "show_options_in_hint"]}
             processed_schema.append({
                 "variable_name": item['variable_name'],
                 "type": item['type'],
-                "options": item['options'] if item['type'] == "select" else "",
-                "hint": hint,
+                "hint": item['hint'],
+                "pydantic_model": None,  # Will be populated when use_pydantic is True
                 **other_values
             })
+            
 
         return processed_schema
     
     def get_schemas(self):
         if "SCHEMAS" in self.data:
-            schemas = self.process_schema(self.data["SCHEMAS"].values())
+            schemas = self.process_single_schema(self.data["SCHEMAS"].values())
         else:
             schemas = []
         if len(schemas) == 0:
@@ -158,6 +166,14 @@ class Prompt:
 
         return True
         
+    def reset_stop_tags(self):
+        """Reset stop_tags to empty strings for each turn."""
+        self.stop_tags = [""]*self.num_turns
+    
+    def reset_response_templates(self):
+        """Reset response_templates to empty strings for each turn."""
+        self.response_templates = [""]*self.num_turns
+        
     def __getitem__(self, index):
         schema = self.schemas[index]
         prompt_copy = deepcopy(self)
@@ -225,16 +241,3 @@ class Prompt:
         return text.replace("{{", "<span style='background-color: rgb(255, 224, 178, 0.3);'>{{").replace("}}", "}}</span>")
     
     
-class Schemas:
-    def __init__(self, prompt, schemas):
-        self.prompt = prompt
-        self.schemas = schemas
-
-    def __getitem__(self, index):
-        schema = self.schemas[index]
-        prompt_copy = deepcopy(self.prompt)
-        prompt_copy.replace_placeholders(schema)
-        return prompt_copy
-
-    def __len__(self):
-        return len(self.schemas)
